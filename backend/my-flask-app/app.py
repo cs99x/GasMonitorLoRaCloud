@@ -52,6 +52,23 @@ def receive_json():
     
     return jsonify({"received": data}), 200
 
+@app.route('/get-last-entity', methods=['GET'])
+def get_last_entity():
+    last_entity = SensorData.query.order_by(SensorData.id.desc()).first()
+    if last_entity:
+        data = {
+            "device_id": last_entity.device_id,
+            "timestamp": last_entity.timestamp,
+            "battery_pct": last_entity.battery_pct,
+            "battery_chg": last_entity.battery_chg,
+            "sensors": last_entity.sensors,
+            "temperature": last_entity.temperature,
+            "status": last_entity.status
+        }
+        return jsonify(data), 200
+    else:
+        return jsonify({"error": "No data found"}), 404
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # Create tables if they don't exist
