@@ -6,12 +6,17 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7BB324F32D1DB93300308EFC /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7BB324F22D1DB93300308EFC /* CoreBluetooth.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		7BB324B92D1DB0E600308EFC /* Gasmeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gasmeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7BB324DA2D1DB52600308EFC /* Gasmeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gasmeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7BB324F22D1DB93300308EFC /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		7BB324BB2D1DB0E600308EFC /* Gasmeter */ = {
+		7BB324DC2D1DB52600308EFC /* Gasmeter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Gasmeter;
 			sourceTree = "<group>";
@@ -19,93 +24,103 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		7BB324B62D1DB0E600308EFC /* Frameworks */ = {
+		7BB324D72D1DB52600308EFC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7BB324F32D1DB93300308EFC /* CoreBluetooth.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		7BB324B02D1DB0E600308EFC = {
+		7BB324D12D1DB52600308EFC = {
 			isa = PBXGroup;
 			children = (
-				7BB324BB2D1DB0E600308EFC /* Gasmeter */,
-				7BB324BA2D1DB0E600308EFC /* Products */,
+				7BB324DC2D1DB52600308EFC /* Gasmeter */,
+				7BB324F12D1DB93300308EFC /* Frameworks */,
+				7BB324DB2D1DB52600308EFC /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		7BB324BA2D1DB0E600308EFC /* Products */ = {
+		7BB324DB2D1DB52600308EFC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7BB324B92D1DB0E600308EFC /* Gasmeter.app */,
+				7BB324DA2D1DB52600308EFC /* Gasmeter.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		7BB324F12D1DB93300308EFC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7BB324F22D1DB93300308EFC /* CoreBluetooth.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		7BB324B82D1DB0E600308EFC /* Gasmeter */ = {
+		7BB324D92D1DB52600308EFC /* Gasmeter */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7BB324C72D1DB0E800308EFC /* Build configuration list for PBXNativeTarget "Gasmeter" */;
+			buildConfigurationList = 7BB324E82D1DB52700308EFC /* Build configuration list for PBXNativeTarget "Gasmeter" */;
 			buildPhases = (
-				7BB324B52D1DB0E600308EFC /* Sources */,
-				7BB324B62D1DB0E600308EFC /* Frameworks */,
-				7BB324B72D1DB0E600308EFC /* Resources */,
+				7BB324D62D1DB52600308EFC /* Sources */,
+				7BB324D72D1DB52600308EFC /* Frameworks */,
+				7BB324D82D1DB52600308EFC /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				7BB324BB2D1DB0E600308EFC /* Gasmeter */,
+				7BB324DC2D1DB52600308EFC /* Gasmeter */,
 			);
 			name = Gasmeter;
 			packageProductDependencies = (
 			);
 			productName = Gasmeter;
-			productReference = 7BB324B92D1DB0E600308EFC /* Gasmeter.app */;
+			productReference = 7BB324DA2D1DB52600308EFC /* Gasmeter.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		7BB324B12D1DB0E600308EFC /* Project object */ = {
+		7BB324D22D1DB52600308EFC /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
-					7BB324B82D1DB0E600308EFC = {
+					7BB324D92D1DB52600308EFC = {
 						CreatedOnToolsVersion = 16.2;
 					};
 				};
 			};
-			buildConfigurationList = 7BB324B42D1DB0E600308EFC /* Build configuration list for PBXProject "Gasmeter" */;
+			buildConfigurationList = 7BB324D52D1DB52600308EFC /* Build configuration list for PBXProject "Gasmeter" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 7BB324B02D1DB0E600308EFC;
+			mainGroup = 7BB324D12D1DB52600308EFC;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 7BB324BA2D1DB0E600308EFC /* Products */;
+			productRefGroup = 7BB324DB2D1DB52600308EFC /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7BB324B82D1DB0E600308EFC /* Gasmeter */,
+				7BB324D92D1DB52600308EFC /* Gasmeter */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		7BB324B72D1DB0E600308EFC /* Resources */ = {
+		7BB324D82D1DB52600308EFC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -115,7 +130,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		7BB324B52D1DB0E600308EFC /* Sources */ = {
+		7BB324D62D1DB52600308EFC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -125,7 +140,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		7BB324C52D1DB0E800308EFC /* Debug */ = {
+		7BB324E62D1DB52700308EFC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -188,7 +203,7 @@
 			};
 			name = Debug;
 		};
-		7BB324C62D1DB0E800308EFC /* Release */ = {
+		7BB324E72D1DB52700308EFC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -244,7 +259,7 @@
 			};
 			name = Release;
 		};
-		7BB324C82D1DB0E800308EFC /* Debug */ = {
+		7BB324E92D1DB52700308EFC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -255,11 +270,14 @@
 				DEVELOPMENT_TEAM = 776X42K8ZB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "We need Bluetooth access to connect to your device.";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "We need Bluetooth access to connect to your device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -273,7 +291,7 @@
 			};
 			name = Debug;
 		};
-		7BB324C92D1DB0E800308EFC /* Release */ = {
+		7BB324EA2D1DB52700308EFC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -284,11 +302,14 @@
 				DEVELOPMENT_TEAM = 776X42K8ZB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "We need Bluetooth access to connect to your device.";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "We need Bluetooth access to connect to your device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -305,25 +326,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7BB324B42D1DB0E600308EFC /* Build configuration list for PBXProject "Gasmeter" */ = {
+		7BB324D52D1DB52600308EFC /* Build configuration list for PBXProject "Gasmeter" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7BB324C52D1DB0E800308EFC /* Debug */,
-				7BB324C62D1DB0E800308EFC /* Release */,
+				7BB324E62D1DB52700308EFC /* Debug */,
+				7BB324E72D1DB52700308EFC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7BB324C72D1DB0E800308EFC /* Build configuration list for PBXNativeTarget "Gasmeter" */ = {
+		7BB324E82D1DB52700308EFC /* Build configuration list for PBXNativeTarget "Gasmeter" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7BB324C82D1DB0E800308EFC /* Debug */,
-				7BB324C92D1DB0E800308EFC /* Release */,
+				7BB324E92D1DB52700308EFC /* Debug */,
+				7BB324EA2D1DB52700308EFC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 7BB324B12D1DB0E600308EFC /* Project object */;
+	rootObject = 7BB324D22D1DB52600308EFC /* Project object */;
 }
