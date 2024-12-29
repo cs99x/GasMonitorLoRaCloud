@@ -16,6 +16,7 @@ const HomeScreen = () => {
   useEffect(() => {
     axios.get('http://127.0.0.1:5000/get-last-entity')
       .then(response => {
+        console.log('Received data:', response.data); // Debugging: log the received data
         setLatestData(response.data);
       })
       .catch(error => {
