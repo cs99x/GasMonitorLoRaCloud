@@ -1,14 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import axios from 'axios';
 
 const HomeScreen = () => {
   const [flippedBoxes, setFlippedBoxes] = useState<{ [key: string]: boolean }>({});
+  const [latestData, setLatestData] = useState<any>(null);
+
   const flipAnimations: { [key: string]: Animated.Value } = {
     Methan: new Animated.Value(0),
     LPG: new Animated.Value(0),
     CO: new Animated.Value(0),
     H2: new Animated.Value(0),
   };
+
+  useEffect(() => {
+    axios.get('http://127.0.0.1:5000/get-last-entity')
+      .then(response => {
+        console.log('Received data:', response.data); // Debugging: log the received data
+        setLatestData(response.data);
+      })
+      .catch(error => {
+        console.error('There was an error fetching the data!', error);
+      });
+  }, []);
 
   const toggleFlip = (gas: string) => {
     const isFlipped = flippedBoxes[gas];
@@ -161,6 +175,20 @@ const HomeScreen = () => {
           'Grenzwert: Über 4% (40,000 ppm) Wasserstoff in der Luft ist explosionsgefährlich.'
         )}
       </View>
+      <Text style={styles.title}>Latest Sensor Data</Text>
+      {latestData ? (
+        <View style={styles.dataContainer}>
+          <Text>Device ID: {latestData.device_id}</Text>
+          <Text>Timestamp: {latestData.timestamp}</Text>
+          <Text>Battery Percentage: {latestData.battery_pct}</Text>
+          <Text>Battery Charging: {latestData.battery_chg ? 'Yes' : 'No'}</Text>
+          <Text>Sensors: {JSON.stringify(latestData.sensors)}</Text>
+          <Text>Temperature: {JSON.stringify(latestData.temperature)}</Text>
+          <Text>Status: {JSON.stringify(latestData.status)}</Text>
+        </View>
+      ) : (
+        <Text>Loading...</Text>
+      )}
     </View>
   );
 };
@@ -300,5 +328,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     flexWrap: 'wrap',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  dataContainer: {
+    marginTop: 20,
   },
 });
