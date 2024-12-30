@@ -4,40 +4,117 @@ import axios from 'axios';
 
 const HomeScreen = () => {
   const [flippedBoxes, setFlippedBoxes] = useState<{ [key: string]: boolean }>({});
-  const [latestData, setLatestData] = useState<any>(null);
+  const [latestData, setLatestData] = useState<LatestData | null>(null);
 
-  const flipAnimations: { [key: string]: Animated.Value } = {
-    Methan: new Animated.Value(0),
-    LPG: new Animated.Value(0),
-    CO: new Animated.Value(0),
-    H2: new Animated.Value(0),
-  };
+  const flipAnimations: { [key: string]: Animated.Value } = {};
 
-  useEffect(() => {
-    axios.get('http://127.0.0.1:5000/get-last-entity')
+  const MOCK_API_URL = 'https://c58e75e3-e1d4-4d97-884d-172b80a6f4ca.mock.pstmn.io/api/get-last-entity';
+
+   // Funktion zum Abrufen der Daten
+   const fetchData = () => {
+    axios.get(MOCK_API_URL)
       .then(response => {
-        console.log('Received data:', response.data); // Debugging: log the received data
+        console.log('Updated data:', response.data);
         setLatestData(response.data);
       })
       .catch(error => {
-        console.error('There was an error fetching the data!', error);
+        console.error('Error fetching data:', error);
       });
+  };
+
+  useEffect(() => {
+    const fetchData = () => {
+      axios.get(MOCK_API_URL)
+        .then(response => {
+          console.log('Updated data:', response.data);
+          setLatestData(response.data);
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+        });
+    };
+  
+    // Initialer Datenabruf
+    fetchData();
+  
+    // Aktualisierung alle 10 Sekunden
+    const interval = setInterval(fetchData, 1000);
+  
+    // Bereinigung bei Komponenten-Demontage
+    return () => clearInterval(interval);
   }, []);
+    
+  /*useEffect(() => {
+    axios.get('http://193.197.230.228:80/get-last-entity')
+      .then(response => {
+        console.log('Received data:', response.data);
+        setLatestData(response.data);
+        initializeAnimations(response.data.sensors);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  }, []); */
+
+  type Sensor = {
+    name: string;
+    type: string;
+    unit: string;
+    val: number;
+  };  
+
+  type LatestData = {
+    device_id: string;
+    timestamp: string;
+    battery_pct: number;
+    battery_chg: boolean;
+    sensors: Sensor[];
+    status: {
+      alarm: boolean;
+      fault: boolean;
+    };
+    temperature: {
+      type: string;
+      unit: string;
+      val: number;
+    };
+  };  
+  
+  const initializeAnimations = (sensors: Sensor[]) => {
+    sensors.forEach(sensor => {
+      flipAnimations[sensor.name] = new Animated.Value(0);
+    });
+  };
+  
 
   const toggleFlip = (gas: string) => {
-    const isFlipped = flippedBoxes[gas];
-
+    const isFlipped = flippedBoxes[gas]; // `flippedBoxes` ist jetzt richtig typisiert
     Animated.timing(flipAnimations[gas], {
       toValue: isFlipped ? 0 : 1,
       duration: 500,
       useNativeDriver: true,
     }).start();
-
+  
     setFlippedBoxes((prevState) => ({
       ...prevState,
       [gas]: !isFlipped,
     }));
-  };
+  };  
+
+  const calculateBarProps = (type: string, value: number): [number, number, number, number, number] => {
+    switch (type) {
+      case 'CH4': // Methane
+        return [value, 50000, 5000, 10000, 50000];
+      case 'CO': // Carbon Monoxide
+        return [value, 1000, 35, 200, 1000];
+      case 'O2': // Oxygen
+        return [value, 100, 19.5, 21, 23];
+      case 'CO2': // Carbon Dioxide
+        return [value, 5000, 1000, 2000, 5000];
+      default:
+        return [value, 100, 50, 75, 100]; // Default thresholds
+    }
+  };  
 
   const renderGradientBarWithArrow = (
     value: number,
@@ -50,13 +127,18 @@ const HomeScreen = () => {
     const warningPercentage = (warningThreshold / maxValue) * 100;
     const criticalPercentage = (criticalThreshold / maxValue) * 100;
     const dangerPercentage = (dangerThreshold / maxValue) * 100;
-
+  
     return (
       <View style={styles.barContainer}>
         <View
           style={[
             styles.barSegment,
-            { width: `${warningPercentage}%`, backgroundColor: 'rgba(0, 128, 0, 0.6)', borderTopLeftRadius: 10, borderBottomLeftRadius: 10 },
+            {
+              width: `${warningPercentage}%`,
+              backgroundColor: 'rgba(0, 128, 0, 0.6)',
+              borderTopLeftRadius: 10,
+              borderBottomLeftRadius: 10,
+            },
           ]}
         />
         <View
@@ -80,7 +162,10 @@ const HomeScreen = () => {
         <View
           style={[
             styles.barSegmentRed,
-            { width: `${100 - dangerPercentage}%`, backgroundColor: 'rgba(139, 0, 0, 0.6)',},
+            {
+              width: `${100 - dangerPercentage}%`,
+              backgroundColor: 'rgba(139, 0, 0, 0.6)',
+            },
           ]}
         />
         <View
@@ -93,103 +178,70 @@ const HomeScreen = () => {
         </View>
       </View>
     );
-  };
+  };  
 
-  const renderGasBox = (
-    gas: string,
-    title: string,
-    symbol: string,
-    value: string,
-    barProps: [number, number, number, number, number],
-    infoText: string
-  ) => {
+  const renderGasBox = (sensor: Sensor) => {
+    const { name, type, val, unit } = sensor;
     const flipStyle = {
       transform: [
         {
-          rotateY: flipAnimations[gas].interpolate({
+          rotateY: flipAnimations[name]?.interpolate({
             inputRange: [0, 1],
             outputRange: ['0deg', '180deg'],
           }),
         },
       ],
     };
-
+  
     return (
-      <Animated.View style={[styles.gasBox, flipStyle]} key={gas}>
-        {flippedBoxes[gas] ? (
+      <Animated.View style={[styles.gasBox, flipStyle]} key={name}>
+        {flippedBoxes[name] ? (
           <View style={styles.infoBack}>
-            <Text style={styles.infoText}>{infoText}</Text>
+            <Text style={styles.infoText}>Information about {name}</Text>
           </View>
         ) : (
           <>
-            <Text style={styles.gasTitle}>{title}</Text>
-            <Text style={styles.gasSymbol}>{symbol}</Text>
-            <Text style={styles.gasValue}>{value}</Text>
-            {renderGradientBarWithArrow(...barProps)}
+            <Text style={styles.gasTitle}>{name}</Text>
+            <Text style={styles.gasSymbol}>{type}</Text>
+            <Text style={styles.gasValue}>{`${val} ${unit}`}</Text>
+            {renderGradientBarWithArrow(...calculateBarProps(type, val))}
           </>
         )}
         <TouchableOpacity
           style={styles.infoButton}
-          onPress={() => toggleFlip(gas)}
+          onPress={() => toggleFlip(name)}
         >
           <Text style={styles.infoButtonText}>{'\u24D8'}</Text>
         </TouchableOpacity>
       </Animated.View>
     );
-  };
+  };  
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Gasmeter</Text>
-      <View style={styles.gasContainer}>
-        {renderGasBox(
-          'Methan',
-          'Methan',
-          'CH₄',
-          '30 ppm',
-          [30, 100, 40, 50, 100],
-          'Grenzwert: Über 5% (50,000 ppm) in der Luft bildet Methan eine explosive Mischung.'
-        )}
-        {renderGasBox(
-          'LPG',
-          'Flüssiggas',
-          'LPG',
-          '10 ppm',
-          [10, 50, 10, 20, 50],
-          'Grenzwert: Über 2% (20,000 ppm) in der Luft ist LPG explosiv; hohe Konzentrationen sind gesundheitsschädlich.'
-        )}
-        {renderGasBox(
-          'CO',
-          'Kohlenmonoxid',
-          'CO',
-          '200 ppm',
-          [200, 1000, 200, 800, 1000],
-          'Grenzwert: Über 35 ppm ist CO gefährlich; ab 200 ppm kann es zu Vergiftungen führen.'
-        )}
-        {renderGasBox(
-          'H2',
-          'Wasserstoff',
-          'H₂',
-          '40 ppm',
-          [40, 80, 30, 40, 80],
-          'Grenzwert: Über 4% (40,000 ppm) Wasserstoff in der Luft ist explosionsgefährlich.'
-        )}
-      </View>
-      <Text style={styles.title}>Latest Sensor Data</Text>
-      {latestData ? (
-        <View style={styles.dataContainer}>
-          <Text>Device ID: {latestData.device_id}</Text>
-          <Text>Timestamp: {latestData.timestamp}</Text>
-          <Text>Battery Percentage: {latestData.battery_pct}</Text>
-          <Text>Battery Charging: {latestData.battery_chg ? 'Yes' : 'No'}</Text>
-          <Text>Sensors: {JSON.stringify(latestData.sensors)}</Text>
-          <Text>Temperature: {JSON.stringify(latestData.temperature)}</Text>
-          <Text>Status: {JSON.stringify(latestData.status)}</Text>
-        </View>
-      ) : (
-        <Text>Loading...</Text>
-      )}
+    <Text style={styles.header}>Gasmeter</Text>
+    <View style={styles.gasContainer}>
+    {latestData && latestData.sensors.map(renderGasBox)}
     </View>
+    <Text style={styles.title}>Latest Sensor Data</Text>
+    {latestData ? (
+    <View style={styles.dataContainer}>
+      <Text>Device ID: {latestData.device_id}</Text>
+      <Text>Timestamp: {new Date(latestData.timestamp).toLocaleString()}</Text>
+      <Text>Battery Percentage: {latestData.battery_pct}%</Text>
+      <Text>Battery Charging: {latestData.battery_chg ? 'Yes' : 'No'}</Text>
+      <Text>Status:</Text>
+      <Text> - Alarm: {latestData.status.alarm ? 'Yes' : 'No'}</Text>
+      <Text> - Fault: {latestData.status.fault ? 'Yes' : 'No'}</Text>
+      <Text>
+        Temperature: {latestData.temperature.val} {latestData.temperature.unit}
+      </Text>
+      </View>
+    ) : (
+      <Text>Loading...</Text>
+    )}
+  </View>
+
   );
 };
 
