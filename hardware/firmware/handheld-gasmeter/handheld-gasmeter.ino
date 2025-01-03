@@ -1,40 +1,193 @@
 #include <SPI.h>
 #include <LoRa.h>
+#include <U8g2lib.h>
+#include <ArduinoJson.h>
 
-// Pin configuration
-#define SS      5   // NSS (CS)
-#define RST     14  // RESET
-#define DIO0    26  // DIO0
+// LoRa Pins
+#define LORA_SS 5
+#define LORA_RST 14
+#define LORA_DIO0 26
+#define LORA_SCK 18
+#define LORA_MISO 19
+#define LORA_MOSI 23
 
-// LoRa parameters
-#define BAND  915E6 // Set frequency to 915 MHz (adjust for your region)
+#define MAX_LORA_PAYLOAD 255 // Maximum payload size for LoRa
+
+// OLED Display
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+
+// Task Handles
+TaskHandle_t loRaTaskHandle = NULL;
+TaskHandle_t oledDisplayTaskHandle = NULL;
+
+// Global JSON Data
+StaticJsonDocument<512> globalDoc;
+SemaphoreHandle_t jsonMutex;
+
+// Function to initialize LoRa
+void setupLoRa() {
+    SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
+
+    LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
+    if (!LoRa.begin(915E6)) {
+        Serial.println("LoRa initialization failed!");
+        while (1);
+    }
+
+    Serial.println("LoRa initialized.");
+}
+
+// Function to send JSON payload in chunks
+void sendLoRaChunked(const char *jsonPayload) {
+    size_t length = strlen(jsonPayload);
+    size_t offset = 0;
+
+    while (offset < length) {
+        size_t chunkSize = std::min((size_t)(length - offset), (size_t)MAX_LORA_PAYLOAD);
+
+        LoRa.beginPacket();
+        LoRa.write((uint8_t *)(jsonPayload + offset), chunkSize);
+        LoRa.endPacket();
+
+        Serial.printf("Sent chunk: %.*s\n", chunkSize, jsonPayload + offset);
+
+        offset += chunkSize;
+
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
+
+// FreeRTOS task for LoRa transmission
+void loRaTask(void *parameter) {
+    while (true) {
+        // Create JSON payload
+        StaticJsonDocument<512> doc;
+
+        doc["battery_chg"] = true;
+        doc["battery_pct"] = 84;
+        doc["device_id"] = "99% von euch sind RATTEN!";
+        doc["timestamp"] = "Sun, 20 Oct 2024 15:30:00 GMT";
+
+        JsonArray sensors = doc.createNestedArray("sensors");
+
+        JsonObject methane = sensors.createNestedObject();
+        methane["name"] = "Methane";
+        methane["type"] = "CH4";
+        methane["unit"] = "ppm";
+        methane["val"] = 129.35;
+
+        JsonObject co2 = sensors.createNestedObject();
+        co2["name"] = "CO2";
+        co2["type"] = "CO2";
+        co2["unit"] = "ppm";
+        co2["val"] = 404.43;
+
+        JsonObject oxygen = sensors.createNestedObject();
+        oxygen["name"] = "Oxygen";
+        oxygen["type"] = "O2";
+        oxygen["unit"] = "%";
+        oxygen["val"] = 21.83;
+
+        JsonObject co = sensors.createNestedObject();
+        co["name"] = "CO";
+        co["type"] = "CO";
+        co["unit"] = "ppm";
+        co["val"] = 35.97;
+
+        JsonObject temperature = doc.createNestedObject("temperature");
+        temperature["type"] = "Temp";
+        temperature["unit"] = "°C";
+        temperature["val"] = 32.23;
+
+        JsonObject status = doc.createNestedObject("status");
+        status["alarm"] = true;
+        status["fault"] = true;
+
+        char jsonString[512];
+        serializeJson(doc, jsonString, sizeof(jsonString));
+
+        // Lock the mutex to update the global JSON
+        if (xSemaphoreTake(jsonMutex, portMAX_DELAY)) {
+            globalDoc = doc;
+            xSemaphoreGive(jsonMutex);
+        }
+
+        Serial.println("Full JSON Payload:");
+        Serial.println(jsonString);
+
+        // Send JSON payload in chunks
+        sendLoRaChunked(jsonString);
+
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
+    }
+}
+
+// FreeRTOS task for OLED display
+void oledDisplayTask(void *parameter) {
+    while (true) {
+        // Lock the mutex to read the global JSON
+        if (xSemaphoreTake(jsonMutex, portMAX_DELAY)) {
+            if (!globalDoc.isNull()) {
+                u8g2.clearBuffer();
+
+                // Display battery and device info
+                u8g2.setFont(u8g2_font_ncenB08_tr);
+                u8g2.setCursor(0, 10);
+                u8g2.print("ID: ");
+                u8g2.print(globalDoc["device_id"].as<const char *>());
+
+                u8g2.setCursor(0, 25);
+                u8g2.print("Battery: ");
+                u8g2.print(globalDoc["battery_pct"].as<int>());
+                u8g2.print("%");
+
+                // Display sensor data
+                JsonArray sensors = globalDoc["sensors"];
+                int y = 40;
+                for (JsonObject sensor : sensors) {
+                    u8g2.setCursor(0, y);
+                    u8g2.print(sensor["name"].as<const char *>());
+                    u8g2.print(": ");
+                    u8g2.print(sensor["val"].as<float>());
+                    u8g2.print(" ");
+                    u8g2.print(sensor["unit"].as<const char *>());
+                    y += 15; // Move to the next line
+                }
+
+                // Update the display
+                u8g2.sendBuffer();
+            }
+            xSemaphoreGive(jsonMutex);
+        }
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
 
 void setup() {
-  // Initialize Serial Monitor
-  Serial.begin(115200);
-  while (!Serial);
+    Serial.begin(115200);
 
-  Serial.println("Initializing LoRa module...");
+    // Initialize LoRa
+    setupLoRa();
 
-  // Configure LoRa module pins
-  LoRa.setPins(SS, RST, DIO0);
+    // Initialize OLED
+    u8g2.begin();
 
-  // Initialize LoRa module
-  if (!LoRa.begin(BAND)) {
-    Serial.println("LoRa initialization failed. Check connections.");
-    while (true); // Halt if failed
-  }
+    // Display initialization message
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.setCursor(0, 10);
+    u8g2.print("Initializing...");
+    u8g2.sendBuffer();
 
-  Serial.println("LoRa initialized successfully.");
+    // Create mutex for JSON synchronization
+    jsonMutex = xSemaphoreCreateMutex();
+
+    // Create FreeRTOS tasks
+    xTaskCreatePinnedToCore(loRaTask, "LoRaTask", 4096, NULL, 1, &loRaTaskHandle, 1);
+    xTaskCreatePinnedToCore(oledDisplayTask, "OLEDTask", 4096, NULL, 1, &oledDisplayTaskHandle, 1);
 }
 
 void loop() {
-  // Send a message every 5 seconds
-  Serial.println("Sending message...");
-  LoRa.beginPacket();
-  LoRa.print("Hello, LoRa!");
-  LoRa.endPacket();
-
-  Serial.println("Message sent!");
-  delay(5000);
+    // Nothing to do in the main loop, FreeRTOS handles everything
 }

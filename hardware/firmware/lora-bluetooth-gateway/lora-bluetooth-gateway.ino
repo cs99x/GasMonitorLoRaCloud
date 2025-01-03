@@ -1,157 +1,194 @@
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
-#include <ArduinoJson.h>
+/**
+ * Modified to "just work" with my library for the heltec esp32 lora v3 board
+ * 
+*/
 
-#define SERVICE_UUID        "12345678-1234-1234-1234-123456789abc"
-#define CHARACTERISTIC_UUID "87654321-4321-4321-4321-abc123456789"
 
-BLECharacteristic *pCharacteristic;
-bool deviceConnected = false;
-bool isAdvertising = false; // Flag to track advertising state
+#define HELTEC_POWER_BUTTON
+#include <heltec_unofficial.h>
 
-// FreeRTOS task handle
-TaskHandle_t jsonTaskHandle = NULL;
+/**
+   The MIT License (MIT)
 
-// Callbacks for connection events
-class MyServerCallbacks : public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) override {
-        deviceConnected = true;
-        Serial.println("Device connected!");
-    }
+   Copyright (c) 2018 by ThingPulse, Daniel Eichhorn
+   Copyright (c) 2018 by Fabrice Weinberg
 
-    void onDisconnect(BLEServer* pServer) override {
-        deviceConnected = false;
-        Serial.println("Device disconnected!");
-        isAdvertising = false; // Mark advertising as stopped
-        vTaskDelete(jsonTaskHandle); // Delete the task when the device disconnects
-        jsonTaskHandle = NULL;
-    }
-};
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
 
-void setup() {
-    Serial.begin(115200);
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
 
-    // Initialize BLE
-    BLEDevice::init("ESP32_Gasmeter");
-    BLEDevice::setMTU(512); // Increase MTU to 512 bytes
-    BLEServer *pServer = BLEDevice::createServer();
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
 
-    // Set callbacks for connection events
-    pServer->setCallbacks(new MyServerCallbacks());
+   ThingPulse invests considerable time and money to develop these open source libraries.
+   Please support us by buying our products (and not the clones) from
+   https://thingpulse.com
 
-    // Create BLE Service
-    BLEService *pService = pServer->createService(SERVICE_UUID);
+*/
 
-    // Create BLE Characteristic
-    pCharacteristic = pService->createCharacteristic(
-                        CHARACTERISTIC_UUID,
-                        BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+// Adapted from Adafruit_SSD1306
+void drawLines() {
+  for (int16_t i = 0; i < display.getWidth(); i += 4) {
+    display.drawLine(0, 0, i, display.getHeight() - 1);
+    display.display();
+    heltec_delay(10);
+  }
+  for (int16_t i = 0; i < display.getHeight(); i += 4) {
+    display.drawLine(0, 0, display.getWidth() - 1, i);
+    display.display();
+    heltec_delay(10);
+  }
+  heltec_delay(250);
 
-    // Start the BLE Service
-    pService->start();
+  display.clear();
+  for (int16_t i = 0; i < display.getWidth(); i += 4) {
+    display.drawLine(0, display.getHeight() - 1, i, 0);
+    display.display();
+    heltec_delay(10);
+  }
+  for (int16_t i = display.getHeight() - 1; i >= 0; i -= 4) {
+    display.drawLine(0, display.getHeight() - 1, display.getWidth() - 1, i);
+    display.display();
+    heltec_delay(10);
+  }
+  heltec_delay(250);
 
-    // Start advertising
-    startAdvertising();
-
-    Serial.println("BLE advertising started...");
+  display.clear();
+  for (int16_t i = display.getWidth() - 1; i >= 0; i -= 4) {
+    display.drawLine(display.getWidth() - 1, display.getHeight() - 1, i, 0);
+    display.display();
+    heltec_delay(10);
+  }
+  for (int16_t i = display.getHeight() - 1; i >= 0; i -= 4) {
+    display.drawLine(display.getWidth() - 1, display.getHeight() - 1, 0, i);
+    display.display();
+    heltec_delay(10);
+  }
+  heltec_delay(250);
+  display.clear();
+  for (int16_t i = 0; i < display.getHeight(); i += 4) {
+    display.drawLine(display.getWidth() - 1, 0, 0, i);
+    display.display();
+    heltec_delay(10);
+  }
+  for (int16_t i = 0; i < display.getWidth(); i += 4) {
+    display.drawLine(display.getWidth() - 1, 0, i, display.getHeight() - 1);
+    display.display();
+    heltec_delay(10);
+  }
+  heltec_delay(250);
 }
 
-// Task for generating JSON and sending BLE notifications
-void jsonTask(void *parameter) {
-    const unsigned long interval = 1000; // 1-second interval
-    unsigned long previousMillis = millis();
+// Adapted from Adafruit_SSD1306
+void drawRect() {
+  for (int16_t i = 0; i < display.getHeight() / 2; i += 2) {
+    display.drawRect(i, i, display.getWidth() - 2 * i, display.getHeight() - 2 * i);
+    display.display();
+    heltec_delay(10);
+  }
+}
 
-    while (true) {
-        if (deviceConnected) {
-            unsigned long currentMillis = millis();
-            if (currentMillis - previousMillis >= interval) {
-                previousMillis = currentMillis;
+// Adapted from Adafruit_SSD1306
+void fillRect() {
+  uint8_t color = 1;
+  for (int16_t i = 0; i < display.getHeight() / 2; i += 3) {
+    display.setColor((color % 2 == 0) ? BLACK : WHITE); // alternate colors
+    display.fillRect(i, i, display.getWidth() - i * 2, display.getHeight() - i * 2);
+    display.display();
+    heltec_delay(10);
+    color++;
+  }
+  // Reset back to WHITE
+  display.setColor(WHITE);
+}
 
-                // Generate JSON
-                String jsonString = generateJson();
-                Serial.println("Generated JSON: " + jsonString);
+// Adapted from Adafruit_SSD1306
+void drawCircle() {
+  for (int16_t i = 0; i < display.getHeight(); i += 2) {
+    display.drawCircle(display.getWidth() / 2, display.getHeight() / 2, i);
+    display.display();
+    heltec_delay(10);
+  }
+  heltec_delay(1000);
+  display.clear();
 
-                // Send JSON
-                pCharacteristic->setValue(jsonString.c_str());
-                pCharacteristic->notify();
-            }
-        } else {
-            vTaskDelay(100 / portTICK_PERIOD_MS); // Sleep task if device not connected
-        }
-    }
+  // This will draw the part of the circel in quadrant 1
+  // Quadrants are numberd like this:
+  //   0010 | 0001
+  //  ------|-----
+  //   0100 | 1000
+  //
+  display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00000001);
+  display.display();
+  heltec_delay(200);
+  display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00000011);
+  display.display();
+  heltec_delay(200);
+  display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00000111);
+  display.display();
+  heltec_delay(200);
+  display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00001111);
+  display.display();
+}
+
+void printBuffer() {
+  // Some test data
+  const char* test[] = {
+    "Hello World!",
+    "This goes to" ,
+    "show that",
+    "you can",
+    "print to the",
+    "tiny display.",
+    "As you can",
+    "see scrolling",
+    "works just",
+    "fine. Have a",
+    "nice day !"
+  };
+  display.clear();
+  for (uint8_t i = 0; i < 11; i++) {
+    // Print to the screen
+    display.println(test[i]);
+    heltec_delay(750);
+  }
+}
+
+void setup() {
+  heltec_setup();
+
+  drawLines();
+  heltec_delay(1000);
+  display.clear();
+
+  drawRect();
+  heltec_delay(1000);
+  display.clear();
+
+  fillRect();
+  heltec_delay(1000);
+  display.clear();
+
+  drawCircle();
+  heltec_delay(1000);
+  display.clear();
+
+  printBuffer();
+  heltec_delay(1000);
+  display.clear();
 }
 
 void loop() {
-    if (deviceConnected && jsonTaskHandle == NULL) {
-        // Create the JSON task when a device connects
-        xTaskCreatePinnedToCore(
-            jsonTask,          // Task function
-            "JSONTask",        // Task name
-            4096,              // Stack size in bytes
-            NULL,              // Task input parameter
-            1,                 // Priority
-            &jsonTaskHandle,   // Task handle
-            1                  // Core to run the task on
-        );
-    }
-}
-
-// Generate random JSON data
-String generateJson() {
-    StaticJsonDocument<512> doc;
-
-    doc["id"] = "Gasmeter v1";
-    doc["ts"] = "2024-10-20T15:30:00Z"; // Placeholder, could use real-time logic
-
-    JsonObject batt = doc.createNestedObject("batt");
-    batt["pct"] = random(0, 101); // Random battery percentage
-    batt["chg"] = true;   // Random boolean: 0 or 1
-
-    JsonArray sensors = doc.createNestedArray("sensors");
-
-    JsonObject ch4 = sensors.createNestedObject();
-    ch4["type"] = "CH4";
-    ch4["name"] = "Methane";
-    ch4["unit"] = "ppm";
-    ch4["val"] = random(50, 200) + random(0, 100) / 100.0;
-
-    JsonObject co2 = sensors.createNestedObject();
-    co2["type"] = "CO2";
-    co2["name"] = "CO2";
-    co2["unit"] = "ppm";
-    co2["val"] = random(400, 600) + random(0, 100) / 100.0;
-
-    JsonObject o2 = sensors.createNestedObject();
-    o2["type"] = "O2";
-    o2["name"] = "Oxygen";
-    o2["unit"] = "%";
-    o2["val"] = random(19, 22) + random(0, 100) / 100.0;
-
-    JsonObject co = sensors.createNestedObject();
-    co["type"] = "CO";
-    co["name"] = "CO";
-    co["unit"] = "ppm";
-    co["val"] = random(20, 50) + random(0, 100) / 100.0;
-
-    JsonObject temp = doc.createNestedObject("temp");
-    temp["type"] = "Temp";
-    temp["unit"] = "°C";
-    temp["val"] = random(15, 35) + random(0, 100) / 100.0;
-
-    JsonObject stat = doc.createNestedObject("stat");
-    stat["alarm"] = true;
-    stat["fault"] = true;
-
-    String jsonString;
-    serializeJson(doc, jsonString);
-    return jsonString;
-}
-
-// Start BLE advertising
-void startAdvertising() {
-    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->start();
-    isAdvertising = true;
-    Serial.println("Restarted BLE advertising...");
+  heltec_loop();
 }
