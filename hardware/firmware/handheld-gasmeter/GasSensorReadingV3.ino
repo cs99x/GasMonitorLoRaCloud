@@ -38,8 +38,8 @@ void loop() {
     // Create JSON payload
     StaticJsonDocument<512> doc;
 
-    doc["battery_chg"] = unknown;
-    doc["battery_pct"] = --;
+    doc["battery_chg"] = true;
+    doc["battery_pct"] = 96;
     doc["device_id"] = "SOO EIN FEUERBALL JUNGEE";
     doc["timestamp"] = "Sun, 20 Oct 2024 15:30:00 GMT";
 
