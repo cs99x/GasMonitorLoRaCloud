@@ -1,44 +1,110 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import axios from 'axios';
 
 const HomeScreen = () => {
   const [flippedBoxes, setFlippedBoxes] = useState<{ [key: string]: boolean }>({});
-  const [latestData, setLatestData] = useState<any>(null);
+  const [latestData, setLatestData] = useState<LatestData | null>(null);
 
-  const flipAnimations: { [key: string]: Animated.Value } = {
-    Methan: new Animated.Value(0),
-    LPG: new Animated.Value(0),
-    CO: new Animated.Value(0),
-    H2: new Animated.Value(0),
-  };
+  const [flipAnimations, setFlipAnimations] = useState<{ [key: string]: Animated.Value }>({});
 
-  useEffect(() => {
-    axios.get('http://127.0.0.1:5000/get-last-entity')
+  // Funktion zum Abrufen der Daten
+  const fetchData = () => {
+    axios.get('http://5.231.1.79:8000/get-last-entity')
       .then(response => {
-        console.log('Received data:', response.data); // Debugging: log the received data
+        console.log('Updated data:', response.data);
         setLatestData(response.data);
       })
       .catch(error => {
-        console.error('There was an error fetching the data!', error);
+        console.error('Error fetching data:', error);
       });
-  }, []);
-
-  const toggleFlip = (gas: string) => {
-    const isFlipped = flippedBoxes[gas];
-
-    Animated.timing(flipAnimations[gas], {
-      toValue: isFlipped ? 0 : 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-
-    setFlippedBoxes((prevState) => ({
-      ...prevState,
-      [gas]: !isFlipped,
-    }));
   };
 
+  useEffect(() => {
+    // Initialer Datenabruf
+    fetchData();
+
+    // Aktualisierung alle 1 Sekunden
+    const interval = setInterval(fetchData, 1000);
+
+    // Bereinigung bei Komponenten-Demontage
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const animations: { [key: string]: Animated.Value } = {};
+    latestData?.sensors.forEach(sensor => {
+      animations[sensor.name] = new Animated.Value(0);
+    });
+    setFlipAnimations(animations);
+  }, [latestData]);
+
+  const renderGasBox = (sensor: Sensor) => {
+  const { name, type, val, unit } = sensor;
+  const flipAnimation = flipAnimations[name];
+
+  const flipStyle = flipAnimation
+    ? {
+        transform: [
+          {
+            rotateY: flipAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['0deg', '180deg'],
+            }),
+          },
+        ],
+      }
+    : {};
+
+  return (
+    <Animated.View style={[styles.gasBox, flipStyle]} key={name}>
+      <View style={[
+        styles.boxContent,
+        { transform: [{ rotateY: flippedBoxes[name] ? '180deg' : '0deg' }] }
+      ]}>
+        {flippedBoxes[name] ? (
+          <View style={styles.infoBack}>
+            <Text style={styles.infoText}>Information about {name}</Text>
+          </View>
+        ) : (
+          <>
+            <Text style={styles.gasTitle}>{name}</Text>
+            <Text style={styles.gasSymbol}>{type}</Text>
+            <Text style={styles.gasValue}>{`${val} ${unit}`}</Text>
+            {renderGradientBarWithArrow(...calculateBarProps(type, val))}
+          </>
+        )}
+      </View>
+      <TouchableOpacity style={styles.infoButton} onPress={() => toggleFlip(name)}>
+        <Text style={styles.infoButtonText}>{'\u24D8'}</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+  type Sensor = {
+    name: string;
+    type: string;
+    unit: string;
+    val: number;
+  };
+  
+  type LatestData = {
+    device_id: string;
+    timestamp: string;
+    battery_pct: number;
+    battery_chg: boolean;
+    sensors: Sensor[];
+    status: {
+      alarm: boolean;
+    };
+    temperature: {
+      type: string;
+      unit: string;
+      val: number;
+    };
+  };
+  
   const renderGradientBarWithArrow = (
     value: number,
     maxValue: number,
@@ -56,7 +122,12 @@ const HomeScreen = () => {
         <View
           style={[
             styles.barSegment,
-            { width: `${warningPercentage}%`, backgroundColor: 'rgba(0, 128, 0, 0.6)', borderTopLeftRadius: 10, borderBottomLeftRadius: 10 },
+            {
+              width: `${warningPercentage}%`,
+              backgroundColor: 'rgba(0, 128, 0, 0.6)',
+              borderTopLeftRadius: 10,
+              borderBottomLeftRadius: 10,
+            },
           ]}
         />
         <View
@@ -80,7 +151,10 @@ const HomeScreen = () => {
         <View
           style={[
             styles.barSegmentRed,
-            { width: `${100 - dangerPercentage}%`, backgroundColor: 'rgba(139, 0, 0, 0.6)',},
+            {
+              width: `${100 - dangerPercentage}%`,
+              backgroundColor: 'rgba(139, 0, 0, 0.6)',
+            },
           ]}
         />
         <View
@@ -95,96 +169,51 @@ const HomeScreen = () => {
     );
   };
 
-  const renderGasBox = (
-    gas: string,
-    title: string,
-    symbol: string,
-    value: string,
-    barProps: [number, number, number, number, number],
-    infoText: string
-  ) => {
-    const flipStyle = {
-      transform: [
-        {
-          rotateY: flipAnimations[gas].interpolate({
-            inputRange: [0, 1],
-            outputRange: ['0deg', '180deg'],
-          }),
-        },
-      ],
-    };
-
-    return (
-      <Animated.View style={[styles.gasBox, flipStyle]} key={gas}>
-        {flippedBoxes[gas] ? (
-          <View style={styles.infoBack}>
-            <Text style={styles.infoText}>{infoText}</Text>
-          </View>
-        ) : (
-          <>
-            <Text style={styles.gasTitle}>{title}</Text>
-            <Text style={styles.gasSymbol}>{symbol}</Text>
-            <Text style={styles.gasValue}>{value}</Text>
-            {renderGradientBarWithArrow(...barProps)}
-          </>
-        )}
-        <TouchableOpacity
-          style={styles.infoButton}
-          onPress={() => toggleFlip(gas)}
-        >
-          <Text style={styles.infoButtonText}>{'\u24D8'}</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    );
+  const calculateBarProps = (type: string, value: number): [number, number, number, number, number] => {
+    switch (type) {
+      case 'CH4': // Methane
+        return [value, 50000, 5000, 10000, 50000];
+      case 'CO': // Carbon Monoxide
+        return [value, 1000, 35, 200, 1000];
+      case 'O2': // Oxygen
+        return [value, 100, 19.5, 21, 23];
+      case 'CO2': // Carbon Dioxide
+        return [value, 5000, 1000, 2000, 5000];
+      default:
+        return [value, 100, 50, 75, 100]; // Default thresholds
+    }
   };
+
+  const toggleFlip = (gas: string) => {
+    const isFlipped = flippedBoxes[gas];
+    if (flipAnimations[gas]) {
+      Animated.timing(flipAnimations[gas], {
+        toValue: isFlipped ? 0 : 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+      setFlippedBoxes((prevState) => ({
+        ...prevState,
+        [gas]: !isFlipped,
+      }));
+    }
+  };  
 
   return (
     <View style={styles.container}>
+      <Text style={styles.topLeftText}>Date: {latestData?.timestamp ? new Date(latestData.timestamp).toLocaleDateString() : 'Loading...'}</Text>
+      <Text style={styles.topRightText}>Device Battery: {latestData?.battery_pct}%</Text>
       <Text style={styles.header}>Gasmeter</Text>
+      <Text style={styles.dataHeader}>Device ID: {latestData?.device_id}</Text>
       <View style={styles.gasContainer}>
-        {renderGasBox(
-          'Methan',
-          'Methan',
-          'CH₄',
-          '30 ppm',
-          [30, 100, 40, 50, 100],
-          'Grenzwert: Über 5% (50,000 ppm) in der Luft bildet Methan eine explosive Mischung.'
-        )}
-        {renderGasBox(
-          'LPG',
-          'Flüssiggas',
-          'LPG',
-          '10 ppm',
-          [10, 50, 10, 20, 50],
-          'Grenzwert: Über 2% (20,000 ppm) in der Luft ist LPG explosiv; hohe Konzentrationen sind gesundheitsschädlich.'
-        )}
-        {renderGasBox(
-          'CO',
-          'Kohlenmonoxid',
-          'CO',
-          '200 ppm',
-          [200, 1000, 200, 800, 1000],
-          'Grenzwert: Über 35 ppm ist CO gefährlich; ab 200 ppm kann es zu Vergiftungen führen.'
-        )}
-        {renderGasBox(
-          'H2',
-          'Wasserstoff',
-          'H₂',
-          '40 ppm',
-          [40, 80, 30, 40, 80],
-          'Grenzwert: Über 4% (40,000 ppm) Wasserstoff in der Luft ist explosionsgefährlich.'
-        )}
+        {latestData && latestData.sensors.map(renderGasBox)}
       </View>
       <Text style={styles.title}>Latest Sensor Data</Text>
       {latestData ? (
         <View style={styles.dataContainer}>
-          <Text>Device ID: {latestData.device_id}</Text>
-          <Text>Timestamp: {latestData.timestamp}</Text>
-          <Text>Battery Percentage: {latestData.battery_pct}</Text>
-          <Text>Battery Charging: {latestData.battery_chg ? 'Yes' : 'No'}</Text>
-          <Text>Sensors: {JSON.stringify(latestData.sensors)}</Text>
-          <Text>Temperature: {JSON.stringify(latestData.temperature)}</Text>
-          <Text>Status: {JSON.stringify(latestData.status)}</Text>
+          <Text>Timestamp: {latestData?.timestamp ? new Date(latestData.timestamp).toLocaleTimeString() : 'Loading...'}</Text>
+          <Text>Alarm: {latestData.status.alarm ? 'On' : 'Off'}</Text>
+          <Text>Temperature: {latestData.temperature.val} {latestData.temperature.unit}</Text>
         </View>
       ) : (
         <Text>Loading...</Text>
@@ -207,6 +236,27 @@ const colors = {
 };
 
 const styles = StyleSheet.create({
+  gasBox: {
+    backgroundColor: colors.gasBackground,
+    padding: 20,
+    borderRadius: 15,
+    width: Dimensions.get('window').width * 0.40,
+    minHeight: 200,
+    marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backfaceVisibility: 'hidden',
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -217,33 +267,47 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 36,
     fontWeight: 'bold',
-    marginBottom: 60,
+    marginBottom: 15,
+    marginTop: 5,
     color: colors.textDark,
     textAlign: 'center',
   },
+  dataHeader: {
+    fontSize: 25,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: colors.textDark,
+    textAlign: 'center',
+  },
+  topLeftText: {
+    position: 'absolute',
+    top: 10, // Abstand von der oberen Kante
+    left: 10, // Abstand von der linken Kante
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  topRightText: {
+    position: 'absolute',
+    top: 10, // Abstand von der oberen Kante
+    right: 10, // Abstand von der linken Kante
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  boxContent: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    backfaceVisibility: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },  
   gasContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-around',
     paddingHorizontal: 10,
-  },
-  gasBox: {
-    backgroundColor: colors.gasBackground,
-    padding: 20,
-    borderRadius: 15,
-    width: '45%',
-    height: 180,
-    marginBottom: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backfaceVisibility: 'hidden',
   },
   gasTitle: {
     fontSize: 20,
@@ -268,11 +332,11 @@ const styles = StyleSheet.create({
   },
   barContainer: {
     position: 'relative',
-    width: '100%',
+    width: '80%',
     height: 10,
     flexDirection: 'row',
     borderRadius: 10,
-    overflow: 'visible', // Ensure the arrow remains visible
+    overflow: 'visible',
   },
   barSegment: {
     height: '100%',
@@ -330,9 +394,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 20,
   },
   dataContainer: {
     marginTop: 20,
