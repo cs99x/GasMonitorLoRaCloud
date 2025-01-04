@@ -63,45 +63,27 @@ void loRaTask(void *parameter) {
         // Create JSON payload
         StaticJsonDocument<512> doc;
 
-        doc["battery_chg"] = true;
-        doc["battery_pct"] = 84;
-        doc["device_id"] = "99% von euch sind RATTEN!";
-        doc["timestamp"] = "Sun, 20 Oct 2024 15:30:00 GMT";
+        doc["pct"] = 84;
+        doc["id"] = "99% von euch sind RATTEN!";
+        doc["ts"] = 3600;
 
         JsonArray sensors = doc.createNestedArray("sensors");
 
         JsonObject methane = sensors.createNestedObject();
-        methane["name"] = "Methane";
         methane["type"] = "CH4";
-        methane["unit"] = "ppm";
         methane["val"] = 129.35;
 
         JsonObject co2 = sensors.createNestedObject();
-        co2["name"] = "CO2";
         co2["type"] = "CO2";
-        co2["unit"] = "ppm";
         co2["val"] = 404.43;
 
         JsonObject oxygen = sensors.createNestedObject();
-        oxygen["name"] = "Oxygen";
         oxygen["type"] = "O2";
-        oxygen["unit"] = "%";
         oxygen["val"] = 21.83;
 
         JsonObject co = sensors.createNestedObject();
-        co["name"] = "CO";
         co["type"] = "CO";
-        co["unit"] = "ppm";
         co["val"] = 35.97;
-
-        JsonObject temperature = doc.createNestedObject("temperature");
-        temperature["type"] = "Temp";
-        temperature["unit"] = "°C";
-        temperature["val"] = 32.23;
-
-        JsonObject status = doc.createNestedObject("status");
-        status["alarm"] = true;
-        status["fault"] = true;
 
         char jsonString[512];
         serializeJson(doc, jsonString, sizeof(jsonString));
@@ -130,15 +112,15 @@ void oledDisplayTask(void *parameter) {
             if (!globalDoc.isNull()) {
                 u8g2.clearBuffer();
 
-                // Display battery and device info
+                // Display ID and battery info
                 u8g2.setFont(u8g2_font_ncenB08_tr);
                 u8g2.setCursor(0, 10);
                 u8g2.print("ID: ");
-                u8g2.print(globalDoc["device_id"].as<const char *>());
+                u8g2.print(globalDoc["id"].as<const char *>());
 
                 u8g2.setCursor(0, 25);
                 u8g2.print("Battery: ");
-                u8g2.print(globalDoc["battery_pct"].as<int>());
+                u8g2.print(globalDoc["pct"].as<int>());
                 u8g2.print("%");
 
                 // Display sensor data
@@ -146,11 +128,9 @@ void oledDisplayTask(void *parameter) {
                 int y = 40;
                 for (JsonObject sensor : sensors) {
                     u8g2.setCursor(0, y);
-                    u8g2.print(sensor["name"].as<const char *>());
+                    u8g2.print(sensor["type"].as<const char *>());
                     u8g2.print(": ");
                     u8g2.print(sensor["val"].as<float>());
-                    u8g2.print(" ");
-                    u8g2.print(sensor["unit"].as<const char *>());
                     y += 15; // Move to the next line
                 }
 

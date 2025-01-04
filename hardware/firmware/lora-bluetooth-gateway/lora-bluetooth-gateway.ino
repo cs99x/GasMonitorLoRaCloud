@@ -1,194 +1,143 @@
-/**
- * Modified to "just work" with my library for the heltec esp32 lora v3 board
- * 
-*/
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+#include <BLE2902.h>
+#include <SPI.h>
+#include <LoRa.h>
+#include <ArduinoJson.h>
 
+#define SERVICE_UUID        "12345678-1234-1234-1234-123456789abc"
+#define CHARACTERISTIC_UUID "87654321-4321-4321-4321-abc123456789"
 
-#define HELTEC_POWER_BUTTON
-#include <heltec_unofficial.h>
+// LoRa Pins
+#define LORA_SS 5
+#define LORA_RST 14
+#define LORA_DIO0 26
+#define LORA_SCK 18
+#define LORA_MISO 19
+#define LORA_MOSI 23
 
-/**
-   The MIT License (MIT)
+BLECharacteristic *pCharacteristic;
+bool deviceConnected = false;
 
-   Copyright (c) 2018 by ThingPulse, Daniel Eichhorn
-   Copyright (c) 2018 by Fabrice Weinberg
+// LoRa Reception Variables
+String receivedPayload = "";
+SemaphoreHandle_t dataMutex;
 
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
+// FreeRTOS Task Handles
+TaskHandle_t bleTaskHandle = NULL;
+TaskHandle_t loraTaskHandle = NULL;
 
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
+// BLE Server Callbacks
+class MyServerCallbacks : public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) override {
+        deviceConnected = true;
+        Serial.println("Device connected! Starting LoRa reception...");
+        vTaskResume(loraTaskHandle); // Resume LoRa task
+    }
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
+    void onDisconnect(BLEServer* pServer) override {
+        deviceConnected = false;
+        Serial.println("Device disconnected! Stopping LoRa reception...");
+        vTaskSuspend(loraTaskHandle); // Suspend LoRa task
+    }
+};
 
-   ThingPulse invests considerable time and money to develop these open source libraries.
-   Please support us by buying our products (and not the clones) from
-   https://thingpulse.com
+// Task: Process and Notify BLE
+void bleTask(void *pvParameters) {
+    while (true) {
+        if (deviceConnected) {
+            if (xSemaphoreTake(dataMutex, portMAX_DELAY)) {
+                if (!receivedPayload.isEmpty()) {
+                    // Send the JSON payload via BLE
+                    pCharacteristic->setValue(receivedPayload.c_str());
+                    pCharacteristic->notify();
+                    Serial.println("JSON payload sent via BLE:");
+                    Serial.println(receivedPayload);
 
-*/
-
-// Adapted from Adafruit_SSD1306
-void drawLines() {
-  for (int16_t i = 0; i < display.getWidth(); i += 4) {
-    display.drawLine(0, 0, i, display.getHeight() - 1);
-    display.display();
-    heltec_delay(10);
-  }
-  for (int16_t i = 0; i < display.getHeight(); i += 4) {
-    display.drawLine(0, 0, display.getWidth() - 1, i);
-    display.display();
-    heltec_delay(10);
-  }
-  heltec_delay(250);
-
-  display.clear();
-  for (int16_t i = 0; i < display.getWidth(); i += 4) {
-    display.drawLine(0, display.getHeight() - 1, i, 0);
-    display.display();
-    heltec_delay(10);
-  }
-  for (int16_t i = display.getHeight() - 1; i >= 0; i -= 4) {
-    display.drawLine(0, display.getHeight() - 1, display.getWidth() - 1, i);
-    display.display();
-    heltec_delay(10);
-  }
-  heltec_delay(250);
-
-  display.clear();
-  for (int16_t i = display.getWidth() - 1; i >= 0; i -= 4) {
-    display.drawLine(display.getWidth() - 1, display.getHeight() - 1, i, 0);
-    display.display();
-    heltec_delay(10);
-  }
-  for (int16_t i = display.getHeight() - 1; i >= 0; i -= 4) {
-    display.drawLine(display.getWidth() - 1, display.getHeight() - 1, 0, i);
-    display.display();
-    heltec_delay(10);
-  }
-  heltec_delay(250);
-  display.clear();
-  for (int16_t i = 0; i < display.getHeight(); i += 4) {
-    display.drawLine(display.getWidth() - 1, 0, 0, i);
-    display.display();
-    heltec_delay(10);
-  }
-  for (int16_t i = 0; i < display.getWidth(); i += 4) {
-    display.drawLine(display.getWidth() - 1, 0, i, display.getHeight() - 1);
-    display.display();
-    heltec_delay(10);
-  }
-  heltec_delay(250);
+                    // Clear payload
+                    receivedPayload = "";
+                }
+                xSemaphoreGive(dataMutex);
+            }
+        }
+        vTaskDelay(500 / portTICK_PERIOD_MS); // Check every 500ms
+    }
 }
 
-// Adapted from Adafruit_SSD1306
-void drawRect() {
-  for (int16_t i = 0; i < display.getHeight() / 2; i += 2) {
-    display.drawRect(i, i, display.getWidth() - 2 * i, display.getHeight() - 2 * i);
-    display.display();
-    heltec_delay(10);
-  }
+// Task: LoRa Reception
+void loraTask(void *pvParameters) {
+    while (true) {
+        int packetSize = LoRa.parsePacket();
+        if (packetSize) {
+            String payload = "";
+            char receivedChar;
+            Serial.println("LoRa packet received.");
+
+            while (LoRa.available()) {
+                receivedChar = LoRa.read();
+                payload += receivedChar;
+            }
+
+            if (xSemaphoreTake(dataMutex, portMAX_DELAY)) {
+                receivedPayload = payload;
+                Serial.println("Complete JSON payload received:");
+                Serial.println(receivedPayload);
+                xSemaphoreGive(dataMutex);
+            }
+
+            Serial.println(); // Newline for clarity
+        }
+        vTaskDelay(100 / portTICK_PERIOD_MS); // Poll LoRa every 100ms
+    }
 }
 
-// Adapted from Adafruit_SSD1306
-void fillRect() {
-  uint8_t color = 1;
-  for (int16_t i = 0; i < display.getHeight() / 2; i += 3) {
-    display.setColor((color % 2 == 0) ? BLACK : WHITE); // alternate colors
-    display.fillRect(i, i, display.getWidth() - i * 2, display.getHeight() - i * 2);
-    display.display();
-    heltec_delay(10);
-    color++;
-  }
-  // Reset back to WHITE
-  display.setColor(WHITE);
-}
+// Initialize LoRa
+void setupLoRa() {
+    SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
+    LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
 
-// Adapted from Adafruit_SSD1306
-void drawCircle() {
-  for (int16_t i = 0; i < display.getHeight(); i += 2) {
-    display.drawCircle(display.getWidth() / 2, display.getHeight() / 2, i);
-    display.display();
-    heltec_delay(10);
-  }
-  heltec_delay(1000);
-  display.clear();
+    if (!LoRa.begin(915E6)) {
+        Serial.println("LoRa initialization failed!");
+        while (1);
+    }
 
-  // This will draw the part of the circel in quadrant 1
-  // Quadrants are numberd like this:
-  //   0010 | 0001
-  //  ------|-----
-  //   0100 | 1000
-  //
-  display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00000001);
-  display.display();
-  heltec_delay(200);
-  display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00000011);
-  display.display();
-  heltec_delay(200);
-  display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00000111);
-  display.display();
-  heltec_delay(200);
-  display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00001111);
-  display.display();
-}
-
-void printBuffer() {
-  // Some test data
-  const char* test[] = {
-    "Hello World!",
-    "This goes to" ,
-    "show that",
-    "you can",
-    "print to the",
-    "tiny display.",
-    "As you can",
-    "see scrolling",
-    "works just",
-    "fine. Have a",
-    "nice day !"
-  };
-  display.clear();
-  for (uint8_t i = 0; i < 11; i++) {
-    // Print to the screen
-    display.println(test[i]);
-    heltec_delay(750);
-  }
+    Serial.println("LoRa initialized.");
 }
 
 void setup() {
-  heltec_setup();
+    Serial.begin(115200);
 
-  drawLines();
-  heltec_delay(1000);
-  display.clear();
+    // Initialize BLE
+    BLEDevice::init("ESP32_LoRa_BLE");
+    BLEServer *pServer = BLEDevice::createServer();
+    pServer->setCallbacks(new MyServerCallbacks());
 
-  drawRect();
-  heltec_delay(1000);
-  display.clear();
+    BLEService *pService = pServer->createService(SERVICE_UUID);
+    pCharacteristic = pService->createCharacteristic(
+        CHARACTERISTIC_UUID,
+        BLECharacteristic::PROPERTY_NOTIFY
+    );
+    pCharacteristic->addDescriptor(new BLE2902());
 
-  fillRect();
-  heltec_delay(1000);
-  display.clear();
+    pService->start();
+    BLEDevice::startAdvertising();
+    Serial.println("BLE advertising started.");
 
-  drawCircle();
-  heltec_delay(1000);
-  display.clear();
+    // Initialize LoRa
+    setupLoRa();
 
-  printBuffer();
-  heltec_delay(1000);
-  display.clear();
+    // Create Mutex for Data Synchronization
+    dataMutex = xSemaphoreCreateMutex();
+
+    // Create FreeRTOS Tasks
+    xTaskCreatePinnedToCore(bleTask, "BLE Task", 4096, NULL, 1, &bleTaskHandle, 1);
+    xTaskCreatePinnedToCore(loraTask, "LoRa Task", 4096, NULL, 1, &loraTaskHandle, 1);
+
+    // Start with LoRa task suspended
+    vTaskSuspend(loraTaskHandle);
 }
 
 void loop() {
-  heltec_loop();
+    // FreeRTOS handles everything
 }
