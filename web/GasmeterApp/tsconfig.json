@@ -1,25 +1,10 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "es2015"],
-    "jsx": "react-native", // Add this line
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
     "strict": true,
+    "jsx": "react-native",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ],
-  "exclude": ["node_modules"]
+  }
 }
