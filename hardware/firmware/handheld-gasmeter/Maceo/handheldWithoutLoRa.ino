@@ -139,6 +139,7 @@ void sensorDisplayTask(void *parameter) {
 
   switch(displayCase) {
 	  case 0:
+      display.clearDisplay();
       display.invertDisplay(false); 
       display.setCursor(0, 0);
       display.printf("MQ-3: %.2f ppm\n", ppmSensor1);
@@ -160,6 +161,7 @@ void sensorDisplayTask(void *parameter) {
       break;
 
   	case 1:
+      display.clearDisplay();
       display.invertDisplay(false);
       display.setCursor(0, 0);
       display.printf("MQ-3: %.2f ppm\n", ppmSensor1);
@@ -169,6 +171,7 @@ void sensorDisplayTask(void *parameter) {
       break;
 
 	  case 2:
+      display.clearDisplay();
       display.setCursor(0, 0);
       //test inversion
       display.invertDisplay(true);
@@ -180,6 +183,7 @@ void sensorDisplayTask(void *parameter) {
       break;
 
     case 3:
+     display.clearDisplay();
       display.invertDisplay(false);
       display.setCursor(0, 0); 
       display.printf("MQ-2: %.2f ppm\n", ppmSensor3);
@@ -189,6 +193,7 @@ void sensorDisplayTask(void *parameter) {
       break;
 
     case 4:
+      display.clearDisplay();
       display.setCursor(0, 0);
       //test inversion
       display.invertDisplay(true);
@@ -198,8 +203,8 @@ void sensorDisplayTask(void *parameter) {
       barSingleGas(voltage4,sensorSupplyVoltage, 20 , 120 , 4, 30);
       display.display();
       break;
-
     case 5:
+      display.clearDisplay();
       display.invertDisplay(false);
       display.setCursor(0, 0);
       display.printf("Battery: --%\n");
@@ -208,9 +213,11 @@ void sensorDisplayTask(void *parameter) {
       display.printf("Gas 2: %.2fppm\n", alertPPMsensor2);
       display.printf("Gas 3: %.2fppm\n", alertPPMsensor3);
       display.printf("Gas 4: %.2fppm\n", alertPPMsensor4); 
+      display.display();
       break;
 
     case 6:
+      display.clearDisplay();
       display.invertDisplay(false);
       display.setCursor(0, 0);
       display.setTextSize(1);
@@ -222,6 +229,7 @@ void sensorDisplayTask(void *parameter) {
       break;
 
 	  default:
+      display.clearDisplay();
       display.invertDisplay(false);
       display.setCursor(0, 0);
       display.printf("Buttonstate: %i \n", currentButton1State);
@@ -324,6 +332,7 @@ void loop() {
  */
 bool isButtonPressedOnce(int buttonPin, int &lastButtonState) {
     if (digitalRead(buttonPin) == 0 && lastButtonState == 1) {
+      vTaskDelay(20 / portTICK_PERIOD_MS); //temporary
         lastButtonState = 0;
         return true;
     } else {
