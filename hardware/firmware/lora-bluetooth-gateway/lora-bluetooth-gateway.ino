@@ -1,157 +1,143 @@
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
+#include <BLE2902.h>
+#include <SPI.h>
+#include <LoRa.h>
 #include <ArduinoJson.h>
 
 #define SERVICE_UUID        "12345678-1234-1234-1234-123456789abc"
 #define CHARACTERISTIC_UUID "87654321-4321-4321-4321-abc123456789"
 
+// LoRa Pins
+#define LORA_SS 5
+#define LORA_RST 14
+#define LORA_DIO0 26
+#define LORA_SCK 18
+#define LORA_MISO 19
+#define LORA_MOSI 23
+
 BLECharacteristic *pCharacteristic;
 bool deviceConnected = false;
-bool isAdvertising = false; // Flag to track advertising state
 
-// FreeRTOS task handle
-TaskHandle_t jsonTaskHandle = NULL;
+// LoRa Reception Variables
+String receivedPayload = "";
+SemaphoreHandle_t dataMutex;
 
-// Callbacks for connection events
+// FreeRTOS Task Handles
+TaskHandle_t bleTaskHandle = NULL;
+TaskHandle_t loraTaskHandle = NULL;
+
+// BLE Server Callbacks
 class MyServerCallbacks : public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) override {
         deviceConnected = true;
-        Serial.println("Device connected!");
+        Serial.println("Device connected! Starting LoRa reception...");
+        vTaskResume(loraTaskHandle); // Resume LoRa task
     }
 
     void onDisconnect(BLEServer* pServer) override {
         deviceConnected = false;
-        Serial.println("Device disconnected!");
-        isAdvertising = false; // Mark advertising as stopped
-        vTaskDelete(jsonTaskHandle); // Delete the task when the device disconnects
-        jsonTaskHandle = NULL;
+        Serial.println("Device disconnected! Stopping LoRa reception...");
+        vTaskSuspend(loraTaskHandle); // Suspend LoRa task
     }
 };
+
+// Task: Process and Notify BLE
+void bleTask(void *pvParameters) {
+    String localPayload = "";
+    while (true) {
+        if (deviceConnected) {
+            if (xSemaphoreTake(dataMutex, portMAX_DELAY)) {
+                localPayload = receivedPayload; // Copy data locally
+                receivedPayload = "";          // Clear global payload
+                xSemaphoreGive(dataMutex);
+            }
+
+            if (!localPayload.isEmpty()) {
+                pCharacteristic->setValue(localPayload.c_str());
+                pCharacteristic->notify();
+                Serial.println("JSON payload sent via BLE:");
+                Serial.println(localPayload);
+                localPayload = ""; // Clear local payload
+                vTaskDelay(50 / portTICK_PERIOD_MS); // Delay to avoid BLE stack overflow
+            }
+        }
+        vTaskDelay(500 / portTICK_PERIOD_MS); // Check every 500ms
+    }
+}
+
+// Task: LoRa Reception
+void loraTask(void *pvParameters) {
+    while (true) {
+        int packetSize = LoRa.parsePacket();
+        if (packetSize) {
+            String payload = "";
+            char receivedChar;
+            Serial.println("LoRa packet received.");
+
+            while (LoRa.available()) {
+                receivedChar = LoRa.read();
+                payload += receivedChar;
+            }
+
+            if (xSemaphoreTake(dataMutex, portMAX_DELAY)) {
+                receivedPayload = payload;
+                Serial.println("Complete JSON payload received:");
+                Serial.println(receivedPayload);
+                xSemaphoreGive(dataMutex);
+            }
+
+            Serial.println(); // Newline for clarity
+        }
+        vTaskDelay(10 / portTICK_PERIOD_MS); // Poll LoRa every 10ms
+    }
+}
+
+// Initialize LoRa
+void setupLoRa() {
+    SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
+    LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
+
+    if (!LoRa.begin(915E6)) {
+        Serial.println("LoRa initialization failed!");
+        while (1);
+    }
+
+    LoRa.setSyncWord(0x34); // Custom sync word
+    Serial.println("LoRa initialized.");
+}
 
 void setup() {
     Serial.begin(115200);
 
     // Initialize BLE
-    BLEDevice::init("ESP32_Gasmeter");
-    BLEDevice::setMTU(512); // Increase MTU to 512 bytes
+    BLEDevice::init("ESP32_LoRa_BLE");
     BLEServer *pServer = BLEDevice::createServer();
-
-    // Set callbacks for connection events
     pServer->setCallbacks(new MyServerCallbacks());
 
-    // Create BLE Service
     BLEService *pService = pServer->createService(SERVICE_UUID);
-
-    // Create BLE Characteristic
     pCharacteristic = pService->createCharacteristic(
-                        CHARACTERISTIC_UUID,
-                        BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+        CHARACTERISTIC_UUID,
+        BLECharacteristic::PROPERTY_NOTIFY
+    );
+    pCharacteristic->addDescriptor(new BLE2902());
 
-    // Start the BLE Service
     pService->start();
+    BLEDevice::startAdvertising();
+    Serial.println("BLE advertising started.");
 
-    // Start advertising
-    startAdvertising();
+    // Initialize LoRa
+    setupLoRa();
 
-    Serial.println("BLE advertising started...");
-}
+    // Create Mutex for Data Synchronization
+    dataMutex = xSemaphoreCreateMutex();
 
-// Task for generating JSON and sending BLE notifications
-void jsonTask(void *parameter) {
-    const unsigned long interval = 1000; // 1-second interval
-    unsigned long previousMillis = millis();
-
-    while (true) {
-        if (deviceConnected) {
-            unsigned long currentMillis = millis();
-            if (currentMillis - previousMillis >= interval) {
-                previousMillis = currentMillis;
-
-                // Generate JSON
-                String jsonString = generateJson();
-                Serial.println("Generated JSON: " + jsonString);
-
-                // Send JSON
-                pCharacteristic->setValue(jsonString.c_str());
-                pCharacteristic->notify();
-            }
-        } else {
-            vTaskDelay(100 / portTICK_PERIOD_MS); // Sleep task if device not connected
-        }
-    }
+    // Create FreeRTOS Tasks on Specific Cores
+    xTaskCreatePinnedToCore(bleTask, "BLE Task", 4096, NULL, 1, &bleTaskHandle, 1); // Core 1
+    xTaskCreatePinnedToCore(loraTask, "LoRa Task", 4096, NULL, 2, &loraTaskHandle, 0); // Core 0
 }
 
 void loop() {
-    if (deviceConnected && jsonTaskHandle == NULL) {
-        // Create the JSON task when a device connects
-        xTaskCreatePinnedToCore(
-            jsonTask,          // Task function
-            "JSONTask",        // Task name
-            4096,              // Stack size in bytes
-            NULL,              // Task input parameter
-            1,                 // Priority
-            &jsonTaskHandle,   // Task handle
-            1                  // Core to run the task on
-        );
-    }
-}
-
-// Generate random JSON data
-String generateJson() {
-    StaticJsonDocument<512> doc;
-
-    doc["id"] = "Gasmeter v1";
-    doc["ts"] = "2024-10-20T15:30:00Z"; // Placeholder, could use real-time logic
-
-    JsonObject batt = doc.createNestedObject("batt");
-    batt["pct"] = random(0, 101); // Random battery percentage
-    batt["chg"] = true;   // Random boolean: 0 or 1
-
-    JsonArray sensors = doc.createNestedArray("sensors");
-
-    JsonObject ch4 = sensors.createNestedObject();
-    ch4["type"] = "CH4";
-    ch4["name"] = "Methane";
-    ch4["unit"] = "ppm";
-    ch4["val"] = random(50, 200) + random(0, 100) / 100.0;
-
-    JsonObject co2 = sensors.createNestedObject();
-    co2["type"] = "CO2";
-    co2["name"] = "CO2";
-    co2["unit"] = "ppm";
-    co2["val"] = random(400, 600) + random(0, 100) / 100.0;
-
-    JsonObject o2 = sensors.createNestedObject();
-    o2["type"] = "O2";
-    o2["name"] = "Oxygen";
-    o2["unit"] = "%";
-    o2["val"] = random(19, 22) + random(0, 100) / 100.0;
-
-    JsonObject co = sensors.createNestedObject();
-    co["type"] = "CO";
-    co["name"] = "CO";
-    co["unit"] = "ppm";
-    co["val"] = random(20, 50) + random(0, 100) / 100.0;
-
-    JsonObject temp = doc.createNestedObject("temp");
-    temp["type"] = "Temp";
-    temp["unit"] = "°C";
-    temp["val"] = random(15, 35) + random(0, 100) / 100.0;
-
-    JsonObject stat = doc.createNestedObject("stat");
-    stat["alarm"] = true;
-    stat["fault"] = true;
-
-    String jsonString;
-    serializeJson(doc, jsonString);
-    return jsonString;
-}
-
-// Start BLE advertising
-void startAdvertising() {
-    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->start();
-    isAdvertising = true;
-    Serial.println("Restarted BLE advertising...");
+    // FreeRTOS handles everything
 }

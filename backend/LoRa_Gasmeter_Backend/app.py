@@ -1,127 +1,116 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS  # Import CORS
-from sqlalchemy.exc import OperationalError
+from flask_cors import CORS
 import datetime
 import logging
+import json
+import os
 
+# App and Database Configuration
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
-
-# Database configuration for SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sensor_data.db'  # Use SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{"/home/csuser/GasMonitorLoRaCloud/backend/instance/sensor_data.db"}?check_same_thread=False'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ECHO'] = True
+CORS(app, resources={r"/*": {"origins": "*"}})
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 db = SQLAlchemy(app)
 
-# Define the model
+# Define the SensorData Model
 class SensorData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    device_id = db.Column(db.String(50))
-    timestamp = db.Column(db.DateTime)
-    battery_pct = db.Column(db.Integer)
-    battery_chg = db.Column(db.Boolean)
-    sensors = db.Column(db.Text)  # Store JSON as string
-    temperature = db.Column(db.Text)  # Store JSON as string
-    status = db.Column(db.Text)  # Store JSON as string
+    pct = db.Column(db.Integer)  # Battery percentage
+    device_id = db.Column(db.String(100))  # Device ID (e.g., "99% von euch sind RATTEN!")
+    timestamp = db.Column(db.Integer)  # Timestamp
+    sensors = db.Column(db.Text)  # JSON string for sensors
 
-    def __init__(self, device_id, timestamp, battery_pct, battery_chg, sensors, temperature, status):
+    def __init__(self, pct, device_id, timestamp, sensors):
+        self.pct = pct
         self.device_id = device_id
         self.timestamp = timestamp
-        self.battery_pct = battery_pct
-        self.battery_chg = battery_chg
         self.sensors = sensors
-        self.temperature = temperature
-        self.status = status
-
-# Enable request logs like Flask's development server
-if not app.debug:
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-
-    app.logger.handlers = [handler]
-    app.logger.setLevel(logging.DEBUG)
 
 @app.before_request
 def log_request_info():
-    app.logger.info('%s %s', request.method, request.url)
+    logger.info('%s %s', request.method, request.url)
 
-# Root endpoint
+# Root Endpoint
 @app.route('/')
 def index():
     return jsonify({"message": "Welcome to the Sensor Data API. Use /receive-json to POST data or /get-last-entity to GET the last entry."})
 
+# Add Data to Database
 @app.route('/receive-json', methods=['POST'])
 def receive_json():
     try:
         data = request.get_json()
-        # Parse the JSON data
-        device_id = data['id']
-        timestamp = datetime.datetime.strptime(data['ts'], '%Y-%m-%dT%H:%M:%SZ')
-        battery_pct = data['batt']['pct']
-        battery_chg = data['batt']['chg']
-        sensors = str(data['sensors'])  # Convert to string
-        temperature = str(data['temp'])  # Convert to string
-        status = str(data['stat'])  # Convert to string
+        if not data:
+            return jsonify({"error": "No JSON payload provided"}), 400
 
-        # Create a new SensorData object
-        sensor_data = SensorData(device_id, timestamp, battery_pct, battery_chg, sensors, temperature, status)
+        # Parse JSON data
+        pct = data.get('pct')
+        device_id = data.get('id')
+        ts = data.get('ts')
+        sensors = json.dumps(data.get('sensors', []), ensure_ascii=False)  # Ensure valid JSON
 
-        # Add to the session and commit
+        if pct is None or not device_id or ts is None:
+            return jsonify({"error": "Missing required fields: 'pct', 'id', or 'ts'"}), 400
+
+        # Add data to the database
+        sensor_data = SensorData(pct, device_id, ts, sensors)
         db.session.add(sensor_data)
         db.session.commit()
 
         return jsonify({"received": data}), 200
-    except OperationalError as e:
-        app.logger.error(f"Database error: {e}")
-        return jsonify({"error": "Database error. Please check logs."}), 500
     except Exception as e:
-        app.logger.error(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error: {e}")
         return jsonify({"error": "An unexpected error occurred."}), 500
 
+
+# Retrieve Last Entity
 @app.route('/get-last-entity', methods=['GET'])
 def get_last_entity():
     try:
         last_entity = SensorData.query.order_by(SensorData.id.desc()).first()
         if last_entity:
+            try:
+                raw_sensors = last_entity.sensors
+                # Fix extra escaping by applying json.loads() twice
+                sensors = json.loads(raw_sensors.replace('\\"', '"'))
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON parsing error for sensors: {raw_sensors}")
+                return jsonify({"error": "Invalid JSON in sensors field"}), 500
+
             data = {
+                "pct": last_entity.pct,
                 "device_id": last_entity.device_id,
-                "timestamp": last_entity.timestamp,
-                "battery_pct": last_entity.battery_pct,
-                "battery_chg": last_entity.battery_chg,
-                "sensors": eval(last_entity.sensors),  # Convert back to dictionary
-                "temperature": eval(last_entity.temperature),  # Convert back to dictionary
-                "status": eval(last_entity.status)  # Convert back to dictionary
+                "timestamp": last_entity.timestamp,  # Raw integer timestamp
+                "sensors": sensors
             }
             return jsonify(data), 200
         else:
             return jsonify({"error": "No data found"}), 404
-    except OperationalError as e:
-        app.logger.error(f"Database error: {e}")
-        return jsonify({"error": "Database error. Please check logs."}), 500
     except Exception as e:
-        app.logger.error(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error: {e}")
         return jsonify({"error": "An unexpected error occurred."}), 500
+    
 
+# Teardown Session
+@app.teardown_request
+def remove_session(exception=None):
+    db.session.remove()
+
+# Initialize and Run the App
 if __name__ == '__main__':
-    # Initialize the database and create tables
     with app.app_context():
         try:
-            app.logger.info("Ensuring database tables exist...")
+            logger.info("Checking for existing database and tables...")
+            if not os.path.exists('/home/csuser/GasMonitorLoRaCloud/backend/instance/sensor_data.db'):
+                logger.info("Database file not found. Creating a new database.")
             db.create_all()  # Create tables if they don't exist
-            app.logger.info("Database and tables created successfully.")
-        except OperationalError as e:
-            app.logger.error(f"Database error during initialization: {e}")
-            exit(1)
+            logger.info("Database and tables created successfully.")
         except Exception as e:
-            app.logger.error(f"Unexpected error during database initialization: {e}")
+            logger.error(f"Error during database initialization: {e}")
             exit(1)
 
-    # Run the Flask application
     app.run(debug=True, host='0.0.0.0', port=8000)
