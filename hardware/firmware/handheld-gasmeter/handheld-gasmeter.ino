@@ -64,7 +64,7 @@ void loRaTask(void *parameter) {
         StaticJsonDocument<512> doc;
 
         doc["pct"] = 84;
-        doc["id"] = "99% von euch sind RATTEN!";
+        doc["id"] = "DPD macht Spass 123";
         doc["ts"] = 3600;
 
         JsonArray sensors = doc.createNestedArray("sensors");
