@@ -45,20 +45,22 @@ class MyServerCallbacks : public BLEServerCallbacks {
 
 // Task: Process and Notify BLE
 void bleTask(void *pvParameters) {
+    String localPayload = "";
     while (true) {
         if (deviceConnected) {
             if (xSemaphoreTake(dataMutex, portMAX_DELAY)) {
-                if (!receivedPayload.isEmpty()) {
-                    // Send the JSON payload via BLE
-                    pCharacteristic->setValue(receivedPayload.c_str());
-                    pCharacteristic->notify();
-                    Serial.println("JSON payload sent via BLE:");
-                    Serial.println(receivedPayload);
-
-                    // Clear payload
-                    receivedPayload = "";
-                }
+                localPayload = receivedPayload; // Copy data locally
+                receivedPayload = "";          // Clear global payload
                 xSemaphoreGive(dataMutex);
+            }
+
+            if (!localPayload.isEmpty()) {
+                pCharacteristic->setValue(localPayload.c_str());
+                pCharacteristic->notify();
+                Serial.println("JSON payload sent via BLE:");
+                Serial.println(localPayload);
+                localPayload = ""; // Clear local payload
+                vTaskDelay(50 / portTICK_PERIOD_MS); // Delay to avoid BLE stack overflow
             }
         }
         vTaskDelay(500 / portTICK_PERIOD_MS); // Check every 500ms
@@ -88,7 +90,7 @@ void loraTask(void *pvParameters) {
 
             Serial.println(); // Newline for clarity
         }
-        vTaskDelay(100 / portTICK_PERIOD_MS); // Poll LoRa every 100ms
+        vTaskDelay(10 / portTICK_PERIOD_MS); // Poll LoRa every 10ms
     }
 }
 
@@ -102,6 +104,7 @@ void setupLoRa() {
         while (1);
     }
 
+    LoRa.setSyncWord(0x34); // Custom sync word
     Serial.println("LoRa initialized.");
 }
 
@@ -130,12 +133,9 @@ void setup() {
     // Create Mutex for Data Synchronization
     dataMutex = xSemaphoreCreateMutex();
 
-    // Create FreeRTOS Tasks
-    xTaskCreatePinnedToCore(bleTask, "BLE Task", 4096, NULL, 1, &bleTaskHandle, 1);
-    xTaskCreatePinnedToCore(loraTask, "LoRa Task", 4096, NULL, 1, &loraTaskHandle, 1);
-
-    // Start with LoRa task suspended
-    vTaskSuspend(loraTaskHandle);
+    // Create FreeRTOS Tasks on Specific Cores
+    xTaskCreatePinnedToCore(bleTask, "BLE Task", 4096, NULL, 1, &bleTaskHandle, 1); // Core 1
+    xTaskCreatePinnedToCore(loraTask, "LoRa Task", 4096, NULL, 2, &loraTaskHandle, 0); // Core 0
 }
 
 void loop() {
