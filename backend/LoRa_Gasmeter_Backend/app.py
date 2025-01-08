@@ -1,13 +1,21 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
+from flask_socketio import SocketIO, emit
+from threading import Thread
+import time
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+import requests
 import datetime
 import logging
 import json
 import os
 
-# App and Database Configuration
 app = Flask(__name__)
+
+# Initialize Flask-SocketIO
+socketio = SocketIO(app)
+
+# App and Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{"/home/csuser/GasMonitorLoRaCloud/backend/instance/sensor_data.db"}?check_same_thread=False'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -32,14 +40,56 @@ class SensorData(db.Model):
         self.system_time = system_time
         self.sensors = sensors
 
+# Logger
 @app.before_request
 def log_request_info():
     logger.info('%s %s', request.method, request.url)
 
+# Web socket
+# WebSocket route to push real-time updates
+@socketio.on('connect')
+def handle_connect():
+    logger.info("Client connected.")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    logger.info("Client disconnected.")
+
+# Periodically send the latest entity
+def send_latest_entity():
+    with app.app_context():  # Push the application context
+        while True:
+            last_entity = SensorData.query.order_by(SensorData.id.desc()).first()
+            if last_entity:
+                raw_sensors = last_entity.sensors
+                sensors = json.loads(raw_sensors.replace('\\"', '"'))
+                system_iso_datetime = datetime.datetime.fromtimestamp(last_entity.system_time).isoformat()
+
+                data = {
+                    "pct": last_entity.pct,
+                    "device_id": last_entity.device_id,
+                    "system_time": last_entity.system_time,
+                    "system_datetime": system_iso_datetime,
+                    "sensors": sensors
+                }
+                socketio.emit('update_data', data)
+            time.sleep(0.5)  # Adjust interval as needed
+
+# Start the background task to push updates
+Thread(target=send_latest_entity, daemon=True).start()
+
 # Root Endpoint
 @app.route('/')
 def index():
-    return jsonify({"message": "Welcome to the Sensor Data API. Use /receive-json to POST data or /get-last-entity to GET the last entry."})
+    return render_template('index.html')
+
+# Graph Endpoint
+@app.route('/graph')
+def graph():
+    """
+    Render the graph.html template.
+    """
+    return render_template('graph.html')
 
 # Add Data to Database
 @app.route('/receive-json', methods=['POST'])
@@ -75,32 +125,37 @@ def receive_json():
 @app.route('/get-last-entity', methods=['GET'])
 def get_last_entity():
     try:
+        # Query the last entity from the database
         last_entity = SensorData.query.order_by(SensorData.id.desc()).first()
+        
         if last_entity:
             try:
+                # Retrieve and parse the `sensors` field as JSON
                 raw_sensors = last_entity.sensors
-                # Fix extra escaping by applying json.loads() twice
-                sensors = json.loads(raw_sensors.replace('\\"', '"'))
+                sensors = json.loads(raw_sensors.replace('\\"', '"'))  # Handle escaping issues
             except json.JSONDecodeError as e:
                 logger.error(f"JSON parsing error for sensors: {raw_sensors}")
                 return jsonify({"error": "Invalid JSON in sensors field"}), 500
 
-            # Convert timestamps to ISO 8601 datetime
+            # Convert system timestamp to ISO 8601 format
             system_iso_datetime = datetime.datetime.fromtimestamp(last_entity.system_time).isoformat()
 
+            # Prepare the response
             data = {
                 "pct": last_entity.pct,
                 "device_id": last_entity.device_id,
-                "system_time": last_entity.system_time,  # System time in raw timestamp
-                "system_datetime": system_iso_datetime,  # System time in ISO 8601
+                "system_time": last_entity.system_time,  # Server-side system timestamp
+                "system_datetime": system_iso_datetime,  # ISO 8601 formatted datetime
                 "sensors": sensors
             }
             return jsonify(data), 200
         else:
+            # No data in the database
             return jsonify({"error": "No data found"}), 404
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         return jsonify({"error": "An unexpected error occurred."}), 500
+
 
 # Retrieve Data From a Specific Timestamp
 @app.route('/get-data-from-timestamp', methods=['GET'])
@@ -167,3 +222,4 @@ if __name__ == '__main__':
             exit(1)
 
     app.run(debug=True, host='0.0.0.0', port=8000)
+    socketio.run(app, debug=True, host='0.0.0.0', port=8000)

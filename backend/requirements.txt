@@ -4,3 +4,5 @@ python-dotenv
 flask_sqlalchemy
 gunicorn
 flask-cors
+requests
+flask-socketio
