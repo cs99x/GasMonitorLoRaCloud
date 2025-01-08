@@ -9,7 +9,7 @@ export default function SecondPage() {
   const [historicalData, setHistoricalData] = useState<HistoricalData>({
     CO2: [],
     CH4: [],
-    O2: [],
+    LPG: [],
     CO: [],
   });
 
@@ -19,7 +19,7 @@ export default function SecondPage() {
   type HistoricalData = {
     CO2: HistoricalDataPoint[];
     CH4: HistoricalDataPoint[];
-    O2: HistoricalDataPoint[];
+    LPG: HistoricalDataPoint[];
     CO: HistoricalDataPoint[];
   };
 
@@ -145,8 +145,8 @@ export default function SecondPage() {
           {renderChart(historicalData.CH4, 'CH4')}
         </View>
         <View style={styles.chartBox}>
-          <Text style={styles.chartTitle}>O2</Text>
-          {renderChart(historicalData.O2, 'O2')}
+          <Text style={styles.chartTitle}>LPG</Text>
+          {renderChart(historicalData.LPG, 'LPG')}
         </View>
         <View style={styles.chartBox}>
           <Text style={styles.chartTitle}>CO</Text>
