@@ -2,22 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { useRouter } from 'expo-router';
+import axios from 'axios'; // Axios für API-Anfragen
 
 export default function SecondPage() {
   const router = useRouter();
   const [historicalData, setHistoricalData] = useState<HistoricalData>({
     CO2: [],
     CH4: [],
-    O2: [],
+    LPG: [],
     CO: [],
   });
 
   const [timeRange, setTimeRange] = useState('6h'); // Standard-Zeitbereich: 6 Stunden
+  const [loading, setLoading] = useState(false); // Zustand, ob die Daten geladen werden
 
   type HistoricalData = {
     CO2: HistoricalDataPoint[];
     CH4: HistoricalDataPoint[];
-    O2: HistoricalDataPoint[];
+    LPG: HistoricalDataPoint[];
     CO: HistoricalDataPoint[];
   };
 
@@ -26,83 +28,47 @@ export default function SecondPage() {
     value: number;     // Wert als Zahl
   };
 
+  // Funktion zum Abrufen von Daten vom Backend
+  const fetchHistoricalData = async (range: string) => {
+    setLoading(true);
+    try {
+      const response = await axios.get('http://127.0.0.1:5000/data', {
+        params: { timeRange: range },
+      });
+      console.log('API Response:', response.data); // Daten in der Konsole ausgeben
+      setHistoricalData(response.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };  
+
+  // Lade Daten für den Standardzeitbereich beim ersten Rendern
   useEffect(() => {
-    const dummyData = generateDummyData(timeRange);
-
-    setHistoricalData(dummyData);
-  }, [timeRange]);
-
-  const generateDummyData = (range: string): HistoricalData => {
-    // Anzahl der Intervalle basierend auf dem Zeitbereich
-    const intervalMinutes = getIntervalMinutes(range); // Intervallgröße in Minuten
-    const totalMinutes = getTotalMinutes(range); // Gesamtdauer in Minuten
-    const numberOfPoints = 6; // Immer 6 Punkte
-
-    // Dummy-Timestamps erzeugen
-    const timestamps: string[] = [];
-    const now = new Date();
-
-    for (let i = 0; i < numberOfPoints; i++) {
-      const time = new Date(now.getTime() - totalMinutes * 60 * 1000 + i * intervalMinutes * 60 * 1000);
-      timestamps.push(`${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`);
-    }
-
-    const generateValues = (base: number) =>
-      timestamps.map((timestamp, index) => ({
-        timestamp,
-        value: base + index * 2 + Math.random() * 5, // Zufällige Werte
-      }));
-
-    return {
-      CO2: generateValues(400),
-      CH4: generateValues(10),
-      O2: generateValues(21),
-      CO: generateValues(2),
-    };
-  };
-
-  const getIntervalMinutes = (range: string): number => {
-    switch (range) {
-      case '1h':
-        return 10; // Alle 10 Minuten
-      case '2h':
-        return 20; // Alle 20 Minuten
-      case '4h':
-        return 40; // Alle 40 Minuten
-      case '6h':
-        return 60; // Alle 60 Minuten (1 Stunde)
-      case '12h':
-        return 120; // Alle 120 Minuten (2 Stunden)
-      default:
-        return 60; // Standard: 1 Stunde
-    }
-  };
-
-  const getTotalMinutes = (range: string): number => {
-    switch (range) {
-      case '1h':
-        return 60; // 1 Stunde
-      case '2h':
-        return 120; // 2 Stunden
-      case '4h':
-        return 240; // 4 Stunden
-      case '6h':
-        return 360; // 6 Stunden
-      case '12h':
-        return 720; // 12 Stunden
-      default:
-        return 360; // Standard: 6 Stunden
-    }
-  };
+    fetchHistoricalData(timeRange);
+  }, [timeRange]); // Neue Daten laden, wenn sich der Zeitbereich ändert
 
   const renderChart = (data: HistoricalDataPoint[], label: string) => {
+    if (loading) {
+      return <Text style={styles.noDataText}>Loading...</Text>;
+    }
+    
     if (data.length === 0) {
       return <Text style={styles.noDataText}>No Data Available</Text>;
     }
-
-    const timeLabels = data.map((point) => point.timestamp); // Extrahiere Zeitstempel
-    const values = data.map((point) => point.value); // Extrahiere Werte
-
+    
+    // Daten auf maximal 10 Einträge begrenzen
+    const limitedData = data.slice(0, 10);
+  
+    // Entferne das Datum aus den Zeitstempeln und behalte nur die Uhrzeit
+    const timeLabels = limitedData.map((point) => {
+      const timeOnly = point.timestamp.split(' ')[1]; // Nimmt nur den Teil nach dem Leerzeichen (die Uhrzeit)
+      return timeOnly;
+    });
+  
+    const values = limitedData.map((point) => point.value); // Extrahiere Werte
+  
     return (
       <LineChart
         data={{
@@ -136,8 +102,8 @@ export default function SecondPage() {
         }}
       />
     );
-  };
-
+  };  
+  
   return (
     <View style={styles.container}>
       {/* Header und Buttons */}
@@ -151,7 +117,9 @@ export default function SecondPage() {
                 styles.button,
                 timeRange === range && styles.buttonActive, // Aktiver Button
               ]}
-              onPress={() => setTimeRange(range)}
+              onPress={() => {
+                setTimeRange(range); // Setze den neuen Zeitbereich
+              }}
             >
               <Text
                 style={[
@@ -177,8 +145,8 @@ export default function SecondPage() {
           {renderChart(historicalData.CH4, 'CH4')}
         </View>
         <View style={styles.chartBox}>
-          <Text style={styles.chartTitle}>O2</Text>
-          {renderChart(historicalData.O2, 'O2')}
+          <Text style={styles.chartTitle}>LPG</Text>
+          {renderChart(historicalData.LPG, 'LPG')}
         </View>
         <View style={styles.chartBox}>
           <Text style={styles.chartTitle}>CO</Text>

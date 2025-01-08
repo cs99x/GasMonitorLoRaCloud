@@ -7,12 +7,12 @@ import { useRouter } from "expo-router";
 const gasConfig = {
   CO2: { name: 'Kohlenstoffdioxid', unit: 'ppm', maxValue: 5000, warningThreshold: 1000, criticalThreshold: 2000, dangerThreshold: 5000 },
   CH4: { name: 'Methan', unit: 'ppm', maxValue: 50000, warningThreshold: 5000, criticalThreshold: 10000, dangerThreshold: 50000 },
-  O2: { name: 'Sauerstoff', unit: '%', maxValue: 100, warningThreshold: 19.5, criticalThreshold: 21, dangerThreshold: 23 },
+  LPG: { name: 'Erdgas', unit: 'ppm', maxValue: 10000, warningThreshold: 2000, criticalThreshold: 4000, dangerThreshold: 10000 },
   CO: { name: 'Kohlenmonoxid', unit: 'ppm', maxValue: 1000, warningThreshold: 35, criticalThreshold: 200, dangerThreshold: 1000 },
 };
 
 // Typdefinitionen für Gase und Sensordaten
-type GasType = 'CO2' | 'CH4' | 'O2' | 'CO';
+type GasType = 'CO2' | 'CH4' | 'LPG' | 'CO';
 
 type Sensor = {
   type: GasType; // Gasbezeichnung (z. B. CO2, CH4, etc.)

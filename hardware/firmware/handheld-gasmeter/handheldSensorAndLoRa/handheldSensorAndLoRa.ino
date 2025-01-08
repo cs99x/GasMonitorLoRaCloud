@@ -20,18 +20,22 @@
 #define LORA_MISO 19
 #define LORA_MOSI 23
 
-//---------------defines old-------------------
-
+// Analoge Pins for the Sensors
 #define Sensor1_ADC_CHANNEL ADC1_CHANNEL_6 // GPIO34 former MQ3_ADC_CHANNEL ADC1_CHANNEL_6
 #define Sensor2_ADC_CHANNEL ADC1_CHANNEL_7 // GPIO35 former MQ135_ADC_CHANNEL ADC1_CHANNEL_7
 #define Sensor3_ADC_CHANNEL ADC1_CHANNEL_4 // GPIO32 former MQ2_ADC_CHANNEL ADC1_CHANNEL_4
 #define Sensor4_ADC_CHANNEL ADC1_CHANNEL_5 // GPIO33 former MQ9_ADC_CHANNEL ADC1_CHANNEL_5
 
+//define Pins for the Buttons
+#define BUTTON_PIN1 16
+#define BUTTON_PIN2
+#define BUTTON_PIN3
+#define BUTTON_PIN4
+
 // display settings
 Adafruit_SH1106G display = Adafruit_SH1106G(128, 64, & Wire);
 
-//define GPIO19 pin conected to button1
-#define BUTTON_PIN1 16
+
 //----buzzer stuff--------
 //defines the pin for the buzzer
 unsigned long previousMillis = 0; // Stores the last time the buzzer state changed
@@ -51,6 +55,7 @@ const float sensorSupplyVoltage = 5.0;
 int currentButton1State = 0;
 int lastButton1State = 0;
 int displayCase = 0;
+
 
 float alertPPMsensor1 = 1000.0; //dummy value
 float alertPPMsensor2 = 40000.0; //dummy value
@@ -72,6 +77,10 @@ bool isButton1pressedOnce();
 void barSingleGas();
 float voltageToPPM();
 void LoRaTask(void* parameter); // gets called by core 1
+void Show4ValueBar();
+void display1ValueBar(bool ,const char* ,const char* , float , float , float , int16_t , int16_t , int16_t , int16_t );
+void smallReadoutAndBar();
+
 
 //---------------numbers old end---------------
 
@@ -92,7 +101,7 @@ void sensorDisplayTask(void * parameter) {
   while (true) {
     //-----------loop old------------
     // readout of Sensors
-    int adc_reading1 = adc1_get_raw(Sensor1_ADC_CHANNEL);
+    int adc_reading1 = adc1_get_raw(Sensor1_ADC_CHANNEL); // 0-4094
     int adc_reading2 = adc1_get_raw(Sensor2_ADC_CHANNEL);
     int adc_reading3 = adc1_get_raw(Sensor3_ADC_CHANNEL);
     int adc_reading4 = adc1_get_raw(Sensor4_ADC_CHANNEL);
@@ -136,138 +145,16 @@ void sensorDisplayTask(void * parameter) {
     sensor4json["type"] = "H2"; // MQ8
     sensor4json["val"] = ppmSensor4;
 
-    //JsonObject temperature = doc.createNestedObject("temperature");
-    //temperature["type"] = "Temp";
-    //temperature["unit"] = "°C";
-    //temperature["val"] = 32.23;
-
-    //JsonObject status = doc.createNestedObject("status");
-    //status["alarm"] = true;
-    //status["fault"] = true;
-
-
-
     // renewing Display
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
 
-    //---------------------- Button testing
-    currentButton1State = digitalRead(BUTTON_PIN1);
-    //----------------------
+gasmeterDisplayHandler(ppmSensor1, ppmSensor2, ppmSensor3, ppmSensor4, 
+voltage1, voltage2, voltage3, voltage4, 
+sensorSupplyVoltage, alertPPMsensor1, alertPPMsensor2, alertPPMsensor3, alertPPMsensor4, rssiLoraDummy, snrLoraDummy, BUTTON_PIN1);
 
-    switch (displayCase) {
-    case 0:
-      display.clearDisplay();
-      display.invertDisplay(false);
-      display.setCursor(0, 0);
-      display.printf("MQ-3: %.2f ppm\n", ppmSensor1);
-      barSingleGas(voltage1, 5.0, 6, 110, 0, 7);
-
-      display.setCursor(0, 14);
-      display.printf("MQ-135: %.2f ppm\n", ppmSensor2);
-      barSingleGas(voltage2, 5.0, 6, 110, 0, 21);
-
-      display.setCursor(0, 28);
-      display.printf("MQ-2: %.2f ppm\n", ppmSensor3);
-      barSingleGas(voltage2, 5.0, 6, 110, 0, 35);
-
-      display.setCursor(0, 42);
-      display.printf("MQ-9: %.2f ppm\n", ppmSensor4);
-      barSingleGas(voltage2, 5.0, 6, 110, 0, 49);
-
-      display.display();
-      break;
-
-    case 1:
-      display.clearDisplay();
-      display.invertDisplay(false);
-      display.setCursor(0, 0);
-      display.printf("MQ-3: %.2f ppm\n", ppmSensor1);
-      display.printf("GAS: ----");
-      barSingleGas(voltage1, sensorSupplyVoltage, 20, 120, 4, 30);
-      display.display();
-      break;
-
-    case 2:
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      //test inversion
-      display.invertDisplay(true);
-
-      display.printf("MQ-135: %.2f ppm\n", ppmSensor2);
-      display.printf("GAS: ----");
-      barSingleGas(voltage2, sensorSupplyVoltage, 20, 120, 4, 30);
-      display.display();
-      break;
-
-    case 3:
-      display.clearDisplay();
-      display.invertDisplay(false);
-      display.setCursor(0, 0);
-      display.printf("MQ-2: %.2f ppm\n", ppmSensor3);
-      display.printf("GAS: ----");
-      barSingleGas(voltage3, sensorSupplyVoltage, 20, 120, 4, 30);
-      display.display();
-      break;
-
-    case 4:
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      //test inversion
-      display.invertDisplay(true);
-
-      display.printf("MQ-9: %.2f ppm\n", ppmSensor4);
-      display.printf("GAS: ----");
-      barSingleGas(voltage4, sensorSupplyVoltage, 20, 120, 4, 30);
-      display.display();
-      break;
-    case 5:
-      display.clearDisplay();
-      display.invertDisplay(false);
-      display.setCursor(0, 0);
-      display.printf("Battery: --%\n");
-      display.printf("      ALERT at:\n");
-      display.printf("Gas 1: %.2fppm\n", alertPPMsensor1);
-      display.printf("Gas 2: %.2fppm\n", alertPPMsensor2);
-      display.printf("Gas 3: %.2fppm\n", alertPPMsensor3);
-      display.printf("Gas 4: %.2fppm\n", alertPPMsensor4);
-      display.display();
-      break;
-
-    case 6:
-      display.clearDisplay();
-      display.invertDisplay(false);
-      display.setCursor(0, 0);
-      display.setTextSize(1);
-      display.printf("LoRa Connection Data\n");
-      display.setTextSize(2);
-      display.printf("RSSI: %i\n", rssiLoraDummy);
-      display.printf("SNR:  %.1f \n", snrLoraDummy);
-      display.display();
-      break;
-
-    default:
-      display.clearDisplay();
-      display.invertDisplay(false);
-      display.setCursor(0, 0);
-      display.printf("Buttonstate: %i \n", currentButton1State);
-      display.printf("Case: %i \n", displayCase);
-      display.printf("reset needed!");
-      display.display();
-      break;
-    }
-
-    //advances the displayCase integer by one, if th specefied button is pressed.
-    //Falls back to 0 if displayCase is higher or equal to 7
-    if (isButtonPressedOnce(16, lastButton1State) == true) {
-      displayCase++;
-      if (displayCase >= 7) {
-        displayCase = 0;
-      }
-    }
-
-    handleBuzzer(ppmSensor1, alertValueThreshold);
+    //handleBuzzer(ppmSensor1, alertValueThreshold);
 
       display.display();
 
@@ -294,7 +181,7 @@ void setup() {
 
   //---------------setup old------------------
 
-  pinMode(16, INPUT_PULLUP); // config GPIO16 as input pin and enable the internal pull-up resistor
+  pinMode(BUTTON_PIN1, INPUT_PULLUP); // config GPIO16 as input pin and enable the internal pull-up resistor
 
   // start Display
   if (!display.begin(0x3C, true)) { // 0x3C standard-I2C-Adress
@@ -399,39 +286,12 @@ void barSingleGas(float liveSensorVoltage, float maxVoltage, int16_t barHeight, 
 float voltageToPPM(float liveSensorVoltage, float VCC, float Rl, float R0, float m, float b) {
 
   float Rs = Rl * (VCC - liveSensorVoltage) / liveSensorVoltage;
-
   float ratioRsR0 = Rs / R0;
-
   // ppm = 10^((log(Rs/R0)-b)/m) 
   float ppm = pow(10, (log10(ratioRsR0) - b) / m);
-
   return ppm;
 }
 
-void handleBuzzer(float alertTest, float alertValueThreshold) {
-  if (alertTest >= alertValueThreshold) {
-    unsigned long currentMillis = millis();
-    if (buzzerOn) {
-      // Turn off the tone after toneDuration
-      if (currentMillis - previousMillis >= toneDuration) {
-        noTone(buzzerPin);
-        buzzerOn = false;
-        previousMillis = currentMillis; // Reset the timer
-      }
-    } else {
-      // Turn on the tone after offDuration
-      if (currentMillis - previousMillis >= offDuration) {
-        tone(buzzerPin, toneFrequency);
-        buzzerOn = true;
-        previousMillis = currentMillis; // Reset the timer
-      }
-    }
-  } else {
-    // Ensure the buzzer is off if alertTest > 2000.0
-    noTone(buzzerPin);
-    buzzerOn = false;
-  }
-}
 
 void setupLoRa() {
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
@@ -476,4 +336,192 @@ void LoRaTask(void* parameter) {
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 }
+
+void Show4ValueBar(float ppmSensor1, float ppmSensor2, float ppmSensor3, float ppmSensor4, 
+                       float voltage1, float voltage2, float voltage3, float voltage4) {
+    display.clearDisplay();
+    display.invertDisplay(false);
+
+    display.setCursor(0, 0);
+    display.printf("MQ-3: %.2f ppm\n", ppmSensor1);
+    barSingleGas(voltage1, 5.0, 6, 110, 0, 7);
+
+    display.setCursor(0, 14);
+    display.printf("MQ-135: %.2f ppm\n", ppmSensor2);
+    barSingleGas(voltage2, 5.0, 6, 110, 0, 21);
+
+    display.setCursor(0, 28);
+    display.printf("MQ-2: %.2f ppm\n", ppmSensor3);
+    barSingleGas(voltage3, 5.0, 6, 110, 0, 35);
+
+    display.setCursor(0, 42);
+    display.printf("MQ-9: %.2f ppm\n", ppmSensor4);
+    barSingleGas(voltage4, 5.0, 6, 110, 0, 49);
+
+    display.display();
+}
+
+void display1ValueBar(bool inversion,const char* sensorName,const char* gas, float ppmSensor, float voltageSensor, float sensorSupplyVoltage, int16_t barHeight, int16_t barWidth, int16_t barStartX, int16_t barStartY){
+  display.clearDisplay();
+      display.invertDisplay(inversion);
+      display.setCursor(0, 0);
+      display.printf("%s: %.2f ppm\n", sensorName, ppmSensor);
+      display.printf("%s", gas);
+      barSingleGas(voltageSensor, sensorSupplyVoltage, barHeight, barWidth, barStartX, barStartY);
+      display.display();
+}
+
+void smallReadoutAndBar(bool invertDisplay,int16_t textStartX,int16_t textStartY, const char* sensorName, float  ppmSensor, float voltageRadout, float maxSensorVoltage){
+  display.setTextSize(1);
+  display.clearDisplay();
+  display.invertDisplay(invertDisplay);
+  display.setCursor(textStartX, textStartY);
+  display.printf("%s : %.2f ppm\n",sensorName, ppmSensor);
+  barSingleGas(voltageRadout,maxSensorVoltage , 6, 110, textStartX,textStartY + 7 );
+
+}
+
+void gasmeterDisplayHandler(float ppmSensor1, 
+  float ppmSensor2, 
+  float ppmSensor3, 
+  float ppmSensor4, 
+  float voltage1, 
+  float voltage2, 
+  float voltage3, 
+  float voltage4, 
+  float sensorSupplyVoltage, 
+  float alertPPMsensor1, 
+  float alertPPMsensor2, 
+  float alertPPMsensor3, 
+  float alertPPMsensor4, 
+  int rssiLora, 
+  float snrLora, 
+  int buttonPin) {
+    static int currentButtonState = 0;
+    static int lastButtonState = 0; // Persistent variable to track the last button state
+    static int persistentDisplayCase = 0; // Persistent display case variable
+
+    switch (persistentDisplayCase) {
+        case 0:
+            display.clearDisplay();
+            smallReadoutAndBar(false, 0, 0, "Sensor1", ppmSensor1, voltage1, 5.0);
+            smallReadoutAndBar(false, 0, 14, "Sensor2", ppmSensor2, voltage2, 5.0);
+            smallReadoutAndBar(false, 0, 28, "Sensor3", ppmSensor3, voltage3, 5.0);
+            smallReadoutAndBar(false, 0, 42, "Sensor4", ppmSensor4, voltage4, 5.0);
+            display.display();
+            break;
+
+        case 1:
+            display1ValueBar(false, "Sensor1Test", "_\-", ppmSensor1, voltage1, sensorSupplyVoltage, 20, 120, 4, 30);
+            break;
+
+        case 2:
+            display1ValueBar(false, "Sensor2Test", "\-\_", ppmSensor2, voltage2, sensorSupplyVoltage, 20, 120, 4, 30);
+            break;
+
+        case 3:
+            display1ValueBar(false, "Sensor3Test", "\.\-", ppmSensor3, voltage3, sensorSupplyVoltage, 20, 120, 4, 30);
+            break;
+
+        case 4:
+            display1ValueBar(false, "Sensor4Test", "\-\.", ppmSensor4, voltage4, sensorSupplyVoltage, 20, 120, 4, 30);
+            break;
+
+        case 5:
+            display.clearDisplay();
+            display.invertDisplay(false);
+            display.setCursor(0, 0);
+            display.printf("Battery: --%%\n");
+            display.printf("      ALERT at:\n");
+            display.printf("Gas 1: %.2fppm\n", alertPPMsensor1);
+            display.printf("Gas 2: %.2fppm\n", alertPPMsensor2);
+            display.printf("Gas 3: %.2fppm\n", alertPPMsensor3);
+            display.printf("Gas 4: %.2fppm\n", alertPPMsensor4);
+            display.display();
+            break;
+
+        case 6:
+            display.clearDisplay();
+            display.invertDisplay(false);
+            display.setCursor(0, 0);
+            display.setTextSize(1);
+            display.printf("LoRa Connection Data\n");
+            display.setTextSize(2);
+            display.printf("RSSI: %i\n", rssiLora);
+            display.printf("SNR:  %.1f \n", snrLora);
+            display.display();
+            break;
+
+        default:
+            display.clearDisplay();
+            display.invertDisplay(false);
+            display.setCursor(0, 0);
+            display.printf("Buttonstate: %i \n", currentButton1State);
+            display.printf("Case: %i \n", persistentDisplayCase);
+            display.printf("reset needed!");
+            display.display();
+            break;
+    }
+
+    // Check for button press and update the persistent display case
+    if (isButtonPressedOnce(buttonPin, lastButtonState)) {
+        persistentDisplayCase++;
+        if (persistentDisplayCase >= 7) {
+            persistentDisplayCase = 0;
+        }
+    }
+
+    lastButtonState = currentButtonState; // Update the last button state
+}
+/*
+void handleBuzzer(float alertTest, float alertValueThreshold) {
+  if (alertTest >= alertValueThreshold) {
+    unsigned long currentMillis = millis();
+    if (buzzerOn) {
+      // Turn off the tone after toneDuration
+      if (currentMillis - previousMillis >= toneDuration) {
+        noTone(buzzerPin);
+        buzzerOn = false;
+        previousMillis = currentMillis; // Reset the timer
+      }
+    } else {
+      // Turn on the tone after offDuration
+      if (currentMillis - previousMillis >= offDuration) {
+        tone(buzzerPin, toneFrequency);
+        buzzerOn = true;
+        previousMillis = currentMillis; // Reset the timer
+      }
+    }
+  } else {
+    // Ensure the buzzer is off if alertTest > 2000.0
+    noTone(buzzerPin);
+    buzzerOn = false;
+  }
+}
+void handleBuzzer(float alertTest, float alertValueThreshold) {
+  if (alertTest >= alertValueThreshold) {
+    unsigned long currentMillis = millis();
+    if (buzzerOn) {
+      // Turn off the tone after toneDuration
+      if (currentMillis - previousMillis >= toneDuration) {
+        noTone(buzzerPin);
+        buzzerOn = false;
+        previousMillis = currentMillis; // Reset the timer
+      }
+    } else {
+      // Turn on the tone after offDuration
+      if (currentMillis - previousMillis >= offDuration) {
+        tone(buzzerPin, toneFrequency);
+        buzzerOn = true;
+        previousMillis = currentMillis; // Reset the timer
+      }
+    }
+  } else {
+    // Ensure the buzzer is off if alertTest > 2000.0
+    noTone(buzzerPin);
+    buzzerOn = false;
+  }
+}
+*/
+
 
