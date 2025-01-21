@@ -143,3 +143,7 @@ This project is a gas sensor monitoring system built around the ESP32 microcontr
 ---
 
 **License**: MIT License
+
+---
+
+This README provides an overview of the current features and roadmap for the gas monitoring system. With the planned enhancements, it aims to be a robust solution for real-time gas detection and monitoring.
