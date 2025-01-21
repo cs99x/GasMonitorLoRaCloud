@@ -59,25 +59,25 @@
         <div class="row g-4">
             <div class="col-md-6">
                 <div class="chart-container">
-                    <h5>CO2</h5>
+                    <h5>CH4</h5>
                     <canvas id="chart1"></canvas>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="chart-container">
-                    <h5>CH4</h5>
+                    <h5>CO</h5>
                     <canvas id="chart2"></canvas>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="chart-container">
-                    <h5>O2</h5>
+                    <h5>LPG</h5>
                     <canvas id="chart3"></canvas>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="chart-container">
-                    <h5>CO</h5>
+                    <h5>H2</h5>
                     <canvas id="chart4"></canvas>
                 </div>
             </div>
@@ -87,10 +87,9 @@
     <!-- Add Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Function to fetch data from the Stuttgart API
         const fetchData = (timeRange) => {
             const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
-
+        
             let targetTime;
             if (timeRange === '1h') {
                 targetTime = currentTime - 3600; // 1 hour ago
@@ -99,40 +98,60 @@
             } else {
                 targetTime = 0; // All data
             }
-
+        
             const apiUrl = `http://stuttgart-int.de/get-data-from-timestamp?system_time=${targetTime}`;
-
+        
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
                     console.log('Data received:', data);
-
+        
+                    let dataAvailable = false;
+        
                     const formattedData = {};
                     data.forEach(record => {
                         record.sensors.forEach(sensor => {
                             const sensorType = sensor.type;
                             const sensorValue = sensor.val;
-
+        
                             if (!formattedData[sensorType]) {
                                 formattedData[sensorType] = { timestamps: [], values: [] };
                             }
-
+        
                             formattedData[sensorType].timestamps.push(record.system_datetime);
                             formattedData[sensorType].values.push(sensorValue);
+                            dataAvailable = true;
                         });
                     });
-
-                    if (formattedData['CO2']) {
-                        createOrUpdateChart('chart1', formattedData['CO2'].timestamps, formattedData['CO2'].values, 'CO2');
-                    }
+        
+                    // Update or create charts
                     if (formattedData['CH4']) {
-                        createOrUpdateChart('chart2', formattedData['CH4'].timestamps, formattedData['CH4'].values, 'CH4');
+                        createOrUpdateChart('chart1', formattedData['CH4'].timestamps, formattedData['CH4'].values, 'CH4');
+                    } else {
+                        showNoDataMessage('chart1', 'CH4');
                     }
-                    if (formattedData['O2']) {
-                        createOrUpdateChart('chart3', formattedData['O2'].timestamps, formattedData['O2'].values, 'O2');
-                    }
+        
                     if (formattedData['CO']) {
-                        createOrUpdateChart('chart4', formattedData['CO'].timestamps, formattedData['CO'].values, 'CO');
+                        createOrUpdateChart('chart2', formattedData['CO'].timestamps, formattedData['CO'].values, 'CO');
+                    } else {
+                        showNoDataMessage('chart2', 'CO');
+                    }
+        
+                    if (formattedData['LPG']) {
+                        createOrUpdateChart('chart3', formattedData['LPG'].timestamps, formattedData['LPG'].values, 'LPG');
+                    } else {
+                        showNoDataMessage('chart3', 'LPG');
+                    }
+        
+                    if (formattedData['H2']) {
+                        createOrUpdateChart('chart4', formattedData['H2'].timestamps, formattedData['H2'].values, 'H2');
+                    } else {
+                        showNoDataMessage('chart4', 'H2');
+                    }
+        
+                    // If no data available, show a general message
+                    if (!dataAvailable) {
+                        alert('No data received for the selected time range.');
                     }
                 })
                 .catch(error => {
@@ -140,15 +159,10 @@
                     alert('Failed to fetch data.');
                 });
         };
-
+        
         const createOrUpdateChart = (chartId, labels, data, label) => {
-            if (!labels || !data || labels.length === 0 || data.length === 0) {
-                console.warn(`No data available for ${label}.`);
-                return;
-            }
-
             const ctx = document.getElementById(chartId).getContext('2d');
-
+        
             // Check if chart already exists
             if (!window[chartId] || !window[chartId].data) {
                 // Initialize a new chart
@@ -190,7 +204,28 @@
                 chart.update();
             }
         };
-
+        
+        const showNoDataMessage = (chartId, label) => {
+            const canvas = document.getElementById(chartId);
+            const ctx = canvas.getContext('2d');
+        
+            // Clear canvas and display "No Data" message
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#999';
+            ctx.textAlign = 'center';
+            ctx.fillText(`No data available for ${label}`, canvas.width / 2, canvas.height / 2);
+        };
+        
+        // Event listeners for buttons
+        document.querySelector('.btn-1h').addEventListener('click', () => fetchData('1h'));
+        document.querySelector('.btn-6h').addEventListener('click', () => fetchData('6h'));
+        document.querySelector('.btn-all').addEventListener('click', () => fetchData('all'));
+        
+        // Fetch default data (last measurement values from the last hour) on page load
+        fetchData('1h');
+        document.querySelector('.btn-6h').addEventListener('click', () => fetchData('6h'));
+        document.querySelector('.btn-all').addEventListener('click', () => fetchData('all'));
 
         // Fetch default data (last measurement values from the last hour) on page load
         fetchData('1h');
