@@ -20,49 +20,6 @@ This project is a Flask application designed to monitor sensor data in real-time
 - **API Integration**: REST API for sensor data
 - **Deployment**: Configured to run on `0.0.0.0:8000`
 
-## Installation
-
-### Prerequisites
-
-- Python 3.8+
-- pip (Python package installer)
-
-### Steps
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-repo-name/real-time-sensor-monitor.git
-   cd real-time-sensor-monitor
-   ```
-
-2. Create a virtual environment and activate it:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install the required packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Set up the database:
-   - Ensure the database path is correct in `app.py`:
-     ```python
-     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///path/to/sensor_data.db'
-     ```
-   - Initialize the database:
-     ```bash
-     python app.py
-     ```
-
-5. Run the application:
-   ```bash
-   python app.py
-   ```
-
-6. Access the application in your browser at `http://localhost:8000`.
-
 ## Usage
 
 ### Endpoints
