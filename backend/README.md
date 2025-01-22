@@ -116,7 +116,3 @@ To deploy the application:
 ## License
 
 This project is licensed under the MIT License.
-
----
-
-**Author**: [Maceo Pohl, Romeo Massoud, Christoph Schmid/LoRa-Gasmeter]
