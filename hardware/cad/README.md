@@ -41,5 +41,6 @@ This repository includes designs and files for a 3D printed case used in the Gas
 
 ---
 
-**Author/Team**: [Christoph Schmid/LoRa-Gasmeter]  
-**Contact**: [your_email@example.com]
+## License
+
+This project is open-source and licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
