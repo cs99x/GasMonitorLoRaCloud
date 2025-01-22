@@ -50,54 +50,6 @@ The iOS app enhances the project by providing real-time monitoring and interacti
 
 For detailed setup instructions and usage, refer to the [Mobile README](https://github.com/cs99x/GasMonitorLoRaCloud/blob/main/mobile/README.md).
 
----
-
-## Setup Instructions
-
-### Hardware Setup
-
-1. **Assembly**:
-   - Connect the gas sensor to the microcontroller.
-   - Interface the LoRa module with the microcontroller.
-   - Ensure proper power connections.
-
-2. **Configuration**:
-   - Flash the microcontroller with the appropriate firmware.
-   - Configure LoRa parameters such as frequency and sync word.
-
-### Cloud Platform Setup
-
-1. **Platform Setup**:
-   - Create an account on your preferred IoT platform (e.g., AWS IoT, Google Cloud IoT).
-   - Set up data ingestion endpoints for the LoRa gateway to send sensor data.
-
-2. **Dashboard Setup**:
-   - Design real-time dashboards to monitor gas levels.
-   - Configure alert rules to notify users of abnormal gas levels.
-
-### iOS App Setup
-
-1. **Environment Setup**:
-   - Install Xcode on macOS.
-   - Ensure Bluetooth is enabled on your Mac and test device.
-
-2. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/cs99x/GasMonitorLoRaCloud.git
-   cd GasMonitorLoRaCloud/mobile
-   ```
-
-3. **Build and Run**:
-   - Open the project in Xcode.
-   - Select a device or simulator to run the app.
-   - Build and run the app.
-
-4. **Test with a BLE Device**:
-   - Ensure a BLE device is available that sends data in the expected JSON format.
-   - Start scanning, connect to the device, and view the sensor data.
-
----
-
 ## Future Enhancements
 
 - Support for additional gas sensors.
