@@ -18,50 +18,6 @@ This project is a Flask application designed to monitor sensor data in real-time
 - **Database**: SQLAlchemy with SQLite
 - **Front-End**: HTML, CSS (Bootstrap), and JavaScript (Chart.js, Socket.IO)
 - **API Integration**: REST API for sensor data
-- **Deployment**: Configured to run on `0.0.0.0:8000`
-
-## Installation
-
-### Prerequisites
-
-- Python 3.8+
-- pip (Python package installer)
-
-### Steps
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-repo-name/real-time-sensor-monitor.git
-   cd real-time-sensor-monitor
-   ```
-
-2. Create a virtual environment and activate it:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install the required packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Set up the database:
-   - Ensure the database path is correct in `app.py`:
-     ```python
-     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///path/to/sensor_data.db'
-     ```
-   - Initialize the database:
-     ```bash
-     python app.py
-     ```
-
-5. Run the application:
-   ```bash
-   python app.py
-   ```
-
-6. Access the application in your browser at `http://localhost:8000`.
 
 ## Usage
 
@@ -76,7 +32,7 @@ This project is a Flask application designed to monitor sensor data in real-time
        "pct": 90,
        "id": "handheld 1",
        "ts": 1673049150,
-       "sensors": [{"type": "CH4", "val": 200}, {"type": "CO", "val": 1280}, {"type": "CO", "val": 726}, {"type": "CO", "val": 3856}]
+       "sensors": [{"type": "CH4", "val": 200}, {"type": "LPG", "val": 1280}, {"type": "CO", "val": 726}, {"type": "CH", "val": 3856}]
      }
      ```
 4. **GET `/get-last-entity`**: Retrieves the latest sensor data entry.
@@ -108,6 +64,7 @@ To deploy the application:
 
 ## Future Improvements
 
+- Implement https
 - Implement user authentication for data access.
 - Enhanced error handling and logging.
 - Add features for further data processing like csv export and dark mode
@@ -116,7 +73,3 @@ To deploy the application:
 ## License
 
 This project is licensed under the MIT License.
-
----
-
-**Author**: [Maceo Pohl, Romeo Massoud, Christoph Schmid/LoRa-Gasmeter]
