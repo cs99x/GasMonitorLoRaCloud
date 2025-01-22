@@ -97,7 +97,7 @@ def send_latest_entity():
                     "sensors": sensors
                 }
                 socketio.emit('update_data', data)
-            time.sleep(0.5)
+            time.sleep(1)
 
 Thread(target=send_latest_entity, daemon=True).start()
 
@@ -244,5 +244,5 @@ if __name__ == '__main__':
             logger.error(f"Error during database initialization: {e}")
             exit(1)
 
-    app.run(debug=True, host='0.0.0.0', port=8000)
-    socketio.run(app, debug=True, host='0.0.0.0', port=8000)
+    # Use socketio.run to initialize Flask with WebSocket
+    socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=30, ping_interval=10, transports=["websocket"])

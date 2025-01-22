@@ -9,23 +9,72 @@
         body { background-color: #f0f0f0; }
         .navbar { background-color: #000; color: #fff; }
         .navbar .navbar-brand, .navbar .nav-link { color: #fff; }
-        .card { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border: none; border-radius: 12px; }
-        .progress { height: 8px; border-radius: 5px; }
-        .progress-bar { border-radius: 5px; }
+        .card-container {
+            perspective: 1000px;
+        }
+        .card {
+            width: 100%;
+            height: 220px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border: none;
+            border-radius: 12px;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            position: relative;
+        }
+        .card.flip {
+            transform: rotateY(180deg);
+        }
+        .card .front, .card .back {
+            backface-visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        .card .front {
+            background: #fff;
+            text-align: center;
+        }
+        .card .back {
+            background: #007bff;
+            color: #fff;
+            transform: rotateY(180deg);
+            text-align: center;
+            padding: 20px;
+        }
+        .info-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+        .progress {
+            width: 80%;
+            height: 8px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            border-radius: 5px;
+        }
         .container { margin-top: 20px; }
-        .device-info { text-align: right; }
-        .info-icon { cursor: pointer; }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
-            <!-- Left-Aligned Buttons -->
             <div class="d-flex">
                 <button id="home-button" class="btn btn-primary me-2">Home</button>
                 <button id="view-graph-button" class="btn btn-primary">View Graph</button>
             </div>
-            <!-- Right-Aligned Battery Info -->
             <div class="ms-auto">
                 <span id="battery-info" class="text-white">Device Battery: --%</span>
             </div>
@@ -54,6 +103,30 @@
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
+        // Static information about gases
+        const gasInfo = {
+            CH4: {
+                fullName: "Methane",
+                description: "A colorless, odorless flammable gas used as fuel.",
+                maxLevel: 500 // Dangerous level
+            },
+            CO2: {
+                fullName: "Carbon Dioxide",
+                description: "A colorless gas naturally present in air, exhaled by animals.",
+                maxLevel: 5000 // Dangerous level
+            },
+            LPG: {
+                fullName: "Liquefied Petroleum Gas",
+                description: "A flammable gas mixture used for heating and cooking.",
+                maxLevel: 1000 // Dangerous level
+            },
+            H2: {
+                fullName: "Hydrogen",
+                description: "A colorless, odorless gas used in industrial processes and as fuel.",
+                maxLevel: 1000 // Dangerous level
+            },
+        };
+
         const socket = io();
 
         socket.on('connect', () => {
@@ -63,54 +136,100 @@
         socket.on('update_data', (data) => {
             console.log('Received update:', data);
 
-            // Update the DOM with the new data
             document.getElementById('battery-info').textContent = `Device Battery: ${data.pct}%`;
             document.getElementById('device-id').textContent = `Device ID: ${data.device_id}`;
             document.getElementById('timestamp').textContent = `Timestamp: ${data.system_datetime}`;
-            
-            // Update sensor cards
+
             const sensorCards = document.getElementById('sensor-cards');
-            sensorCards.innerHTML = ''; // Clear old cards
+            const existingCards = Array.from(sensorCards.querySelectorAll('.card-container'));
+
             data.sensors.forEach(sensor => {
-                const progressWidth = Math.min((sensor.val / 500) * 100, 100); // Example scaling
-                const card = `
-                    <div class="col-md-4 mb-3">
-                        <div class="card p-3">
-                            <div class="d-flex justify-content-between">
-                                <h5>${sensor.type}</h5>
-                                <span class="info-icon" title="${sensor.type} information">&#9432;</span>
-                            </div>
-                            <p>${sensor.type}</p>
-                            <h6>${sensor.val} ppm</h6>
-                            <div class="progress mt-2">
-                                <div class="progress-bar bg-danger" role="progressbar" style="width: ${progressWidth}%;" aria-valuenow="${sensor.val}" aria-valuemin="0" aria-valuemax="500"></div>
+                const gasDetails = gasInfo[sensor.type] || {
+                    fullName: "Unknown Gas",
+                    description: "No description available",
+                    maxLevel: "N/A"
+                };
+                const progressWidth = Math.min((sensor.val / gasDetails.maxLevel) * 100, 100);
+
+                // Define color tones based on gas levels
+                const percentage = sensor.val / gasDetails.maxLevel;
+                let progressBarColor;
+                if (percentage <= 0.16) {
+                    progressBarColor = "#00FF00"; // Green
+                } else if (percentage <= 0.33) {
+                    progressBarColor = "#80FF00"; // Lime
+                } else if (percentage <= 0.50) {
+                    progressBarColor = "#FFFF00"; // Yellow
+                } else if (percentage <= 0.66) {
+                    progressBarColor = "#FF8000"; // Orange
+                } else if (percentage <= 0.83) {
+                    progressBarColor = "#FF4000"; // Red-Orange
+                } else {
+                    progressBarColor = "#FF0000"; // Red
+                }
+
+                // Check if card for this sensor already exists
+                let cardContainer = existingCards.find(container => container.dataset.sensorType === sensor.type);
+                if (cardContainer) {
+                    // Update existing card
+                    const front = cardContainer.querySelector('.front');
+                    const progressBar = cardContainer.querySelector('.progress-bar');
+                    front.querySelector('.gas-ppm').textContent = `${sensor.val} ppm`;
+                    progressBar.style.width = `${progressWidth}%`;
+                    progressBar.style.backgroundColor = progressBarColor; // Apply color tone
+                    progressBar.setAttribute('aria-valuenow', sensor.val);
+                } else {
+                    // Create new card if it doesn't exist
+                    const newCard = `
+                        <div class="col-md-4 mb-3 card-container" data-sensor-type="${sensor.type}">
+                            <div class="card">
+                                <div class="front">
+                                    <span class="info-icon" title="Click for details">&#9432;</span>
+                                    <h3>${sensor.type}</h3>
+                                    <h6>${gasDetails.fullName}</h6>
+                                    <h6 class="gas-ppm">${sensor.val} ppm</h6>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: ${progressWidth}%; background-color: ${progressBarColor};" aria-valuenow="${sensor.val}" aria-valuemin="0" aria-valuemax="${gasDetails.maxLevel}"></div>
+                                    </div>
+                                </div>
+                                <div class="back">
+                                    <h5>${gasDetails.fullName}</h5>
+                                    <p>${gasDetails.description}</p>
+                                    <p>Current Value: ${sensor.val} ppm</p>
+                                    <p>Danger Level: ${gasDetails.maxLevel} ppm</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
-                sensorCards.insertAdjacentHTML('beforeend', card);
+                    `;
+                    sensorCards.insertAdjacentHTML('beforeend', newCard);
+
+                    // Add click listener to the new card
+                    const newCardContainer = sensorCards.querySelector(`.card-container[data-sensor-type="${sensor.type}"]`);
+                    const card = newCardContainer.querySelector('.card');
+                    newCardContainer.addEventListener('click', () => {
+                        if (!card.classList.contains('flipping')) {
+                            card.classList.add('flipping');
+                            card.classList.toggle('flip');
+                            setTimeout(() => card.classList.remove('flipping'), 600); // Matches transition duration
+                        }
+                    });
+                }
             });
         });
 
-        // Add event listener for "Home" button
+
         document.getElementById('home-button').addEventListener('click', () => {
-            console.log('Home button clicked');
             fetch('/api/home', {
                 method: 'GET',
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Home API response:', data);
                 alert(`Home Response: ${data.message}`);
             })
             .catch(error => console.error('Error with Home API:', error));
         });
 
-        // Add event listener for "View Graph" button
         document.getElementById('view-graph-button').addEventListener('click', () => {
-            console.log('View Graph button clicked');
-            
-            // Redirect to the graph.html page via Flask route
             window.location.href = '/graph';
         });
     </script>
