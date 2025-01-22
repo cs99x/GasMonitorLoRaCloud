@@ -34,29 +34,6 @@ This repository includes designs and files for a 3D printed case used in the Gas
 
 ---
 
-## Printing Instructions
-### FDM Version
-1. Load the STL files into your preferred slicing software (e.g., Cura, PrusaSlicer).
-2. Suggested print settings:
-   - **Layer Height**: 0.2mm.
-   - **Infill**: 100%.
-3. Use appropriate filament like PLA or PETG.
-
-### SLS Version (Coming Soon)
-- Better surface quality as well as fitting.
-- More ergonomic casing.
-- Final STL files will be optimized for powder-based printing.
----
-
-## Assembly Instructions
-- **Included Files**:
-  - Individual parts with clear labeling.
-- **Hardware Required**:
-  - Screws and fasteners (refer to the assembly guide for specifications).
-  - Li-ion battery and PCB (for the upcoming SLS version).
-
----
-
 ## Future Plans
 - Integration of advanced features for the SLS version:
   - Enhanced durability and reduced weight.
