@@ -26,22 +26,6 @@ This project includes a 2-layer PCB design (1.6mm thickness) for an ESP32-based 
 
 ---
 
-## Component Details
-
-| **Reference**       | **Description**             | **Footprint**                                      | **Qty** |
-|----------------------|-----------------------------|---------------------------------------------------|---------|
-| C1, C7, C8, C12      | 10uF Capacitor             | Capacitor_SMD:C_0603_1608Metric                  | 4       |
-| C2                  | 220nF Capacitor            | Capacitor_SMD:C_0603_1608Metric                  | 1       |
-| C3                  | 1uF Capacitor              | Capacitor_SMD:C_0603_1608Metric                  | 1       |
-| D1, D3              | WS2812B RGB LEDs           | LED_SMD:LED_WS2812B_PLCC4_5.0x5.0mm_P3.2mm       | 2       |
-| J2                  | USB-C Receptacle           | Connector_USB:USB_C_Receptacle_GCT_USB4085       | 1       |
-| U6                  | ESP32-S3-WROOM-1 Module    | RF_Module:ESP32-S3-WROOM-1                       | 1       |
-| U8, U9, U10, U11    | MQ-4 Gas Sensors           | Sensor:MQ-6                                      | 4       |
-
-**For the complete Bill of Materials (BOM), refer to the project documentation.**
-
----
-
 ## Electrical Specifications
 
 - **Power Input**:
@@ -63,20 +47,6 @@ This project includes a 2-layer PCB design (1.6mm thickness) for an ESP32-based 
 
 ---
 
-## Upcoming Features
-
-1. **Firmware Updates**:
-   - Enhanced BLE and LoRa firmware for secure communication.
-   - Advanced sensor data processing and analytics.
-2. **User Interface Optimization**:
-   - Improved RGB LED indications for system states.
-   - Additional button-based interactions.
-3. **Battery Management**:
-   - Display battery percentage via firmware integration.
-   - Enhanced Li-ion battery protection circuitry.
-
----
-
 ## Usage Instructions
 
 1. **Powering the Board**:
@@ -93,9 +63,3 @@ This project includes a 2-layer PCB design (1.6mm thickness) for an ESP32-based 
 ## License
 
 This project is licensed under the MIT License.
-
----
-
-**Author/Team**: [Christoph Schmid/LoRa-Gasmeter]  
-
-This PCB serves as the foundation for future IoT projects, providing a versatile and compact design for sensor-based applications.
