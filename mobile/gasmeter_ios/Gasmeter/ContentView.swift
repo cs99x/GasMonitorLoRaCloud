@@ -1,12 +1,15 @@
 import SwiftUI
 
+/// A SwiftUI view for managing and displaying Bluetooth device data and interactions.
 struct ContentView: View {
+    /// The Bluetooth manager handling device discovery and connections.
     @StateObject private var bluetoothManager = BluetoothManager()
 
+    /// The body of the view.
     var body: some View {
         NavigationView {
             VStack {
-                // Section: Display Data from Connected Device
+                // Display data from the connected device
                 if let deviceData = bluetoothManager.deviceData {
                     VStack {
                         Text("Device: \(deviceData.id)")
@@ -16,7 +19,8 @@ struct ContentView: View {
                         Text("Timestamp: \(deviceData.ts)")
                         Text("Battery: \(deviceData.batt.pct)%")
                         Text("Charging: \(deviceData.batt.chg ? "Yes" : "No")")
-                        
+
+                        // List of sensor readings
                         List(deviceData.sensors, id: \.type) { reading in
                             VStack(alignment: .leading) {
                                 Text("\(reading.name) (\(reading.type))")
@@ -24,14 +28,14 @@ struct ContentView: View {
                                 Text("Value: \(reading.val) \(reading.unit)")
                             }
                         }
-                        
+
                         Text("Alarm Triggered: \(deviceData.stat.alarm ? "Yes" : "No")")
                         Text("Sensor Fault: \(deviceData.stat.fault ? "Yes" : "No")")
                         Text("Temperature: \(deviceData.temp.val) \(deviceData.temp.unit)")
                     }
                     .padding()
                 } else {
-                    // Section: Display List of Discovered Devices
+                    // Display a list of discovered devices
                     VStack {
                         Text("Discovered Devices")
                             .font(.headline)
@@ -61,7 +65,7 @@ struct ContentView: View {
 
                 Spacer()
 
-                // Button: Start Scanning
+                // Button to start scanning for devices
                 Button("Scan for Devices") {
                     bluetoothManager.startScan()
                 }
@@ -73,5 +77,12 @@ struct ContentView: View {
             .padding()
             .navigationTitle("Bluetooth Scanner")
         }
+    }
+}
+
+/// Preview provider for `ContentView`.
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
     }
 }
