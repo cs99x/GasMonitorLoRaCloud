@@ -24,36 +24,6 @@ This SwiftUI-based app allows users to scan, connect, and interact with Bluetoot
 3. **Receive and Display Data**:
    - Once connected, the app listens for incoming JSON data and displays it in a structured format.
 
-### JSON Structure
-The app expects device data in the following JSON format:
-```json
-{
-  "id": "DeviceID123",
-  "ts": "2025-01-21T12:34:56Z",
-  "batt": {
-    "pct": 80,
-    "chg": true
-  },
-  "sensors": [
-    {
-      "type": "temperature",
-      "name": "Ambient Temp",
-      "unit": "C",
-      "val": 22.5
-    }
-  ],
-  "temp": {
-    "type": "temperature",
-    "unit": "C",
-    "val": 22.5
-  },
-  "stat": {
-    "alarm": false,
-    "fault": false
-  }
-}
-```
-
 ## Key Components
 
 ### `ContentView`
@@ -70,27 +40,6 @@ The app expects device data in the following JSON format:
 ### `DeviceData`
 - A Swift structure to decode and store sensor data received from the device.
 
-## Setup Instructions
-
-1. **Environment Setup**:
-   - Install Xcode on macOS.
-   - Ensure Bluetooth is enabled on your Mac and test device.
-
-2. **Clone the Repository**:
-   ```bash
-   git clone <repository-url>
-   cd <repository-folder>
-   ```
-
-3. **Build and Run**:
-   - Open the project in Xcode.
-   - Select a device or simulator to run the app.
-   - Build and run the app.
-
-4. **Test with a BLE Device**:
-   - Ensure a BLE device is available that sends data in the expected JSON format.
-   - Start scanning, connect to the device, and view the sensor data.
-
 ## Screens
 
 1. **Scanning Screen**:
@@ -106,38 +55,12 @@ The app expects device data in the following JSON format:
 - **CoreBluetooth**: Provides BLE functionality for scanning and connecting to devices.
 - **SwiftUI**: Used for creating the app's user interface.
 
-## Example Output
-
-### Console Log
-```
-Scanning for peripherals...
-Discovered peripheral: SensorDevice1
-Added SensorDevice1 to the list.
-Connecting to peripheral: SensorDevice1
-Connected to peripheral: SensorDevice1
-Received JSON: {"id":"Device123",...}
-Parsed data successfully: DeviceData(id: "Device123", ...)
-```
-
-### App UI
-- **Connected Device**:
-  ```
-  Device: Device123
-  Timestamp: 2025-01-21T12:34:56Z
-  Battery: 80%
-  Charging: Yes
-  Sensors:
-    - Ambient Temp (temperature): 22.5 C
-  Alarm Triggered: No
-  Sensor Fault: No
-  Temperature: 22.5 C
-  ```
-
 ## Future Enhancements
 
 - Add support for writing commands to BLE devices.
 - Include historical data storage and visualization.
 - Implement error handling for connection and JSON parsing issues.
+- Implement buffer if iOS device isnt conencted to the web.
 - Improve UI for better user experience.
 
 ## License
