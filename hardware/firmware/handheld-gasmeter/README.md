@@ -123,25 +123,6 @@ This project is a gas sensor monitoring system built around the ESP32 microcontr
 
 ---
 
-## Installation and Setup
-
-### Hardware Connections
-- **Sensor Pins**:
-  - MQ3 → GPIO34
-  - MQ135 → GPIO35
-  - MQ2 → GPIO32
-  - MQ9 → GPIO33
-- **OLED Display**: Connect via I2C (SDA and SCL).
-- **Buzzer**: GPIO27
-- **Button**: GPIO16 with a pull-up resistor.
-
-### Software Setup
-1. Install required libraries in Arduino IDE or PlatformIO.
-2. Compile and upload the code to the ESP32.
-3. Use the Serial Monitor for debugging and testing.
-
----
-
 **License**: MIT License
 
 ---
