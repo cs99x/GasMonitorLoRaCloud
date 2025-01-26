@@ -81,8 +81,3 @@ BLE advertising started. Device connected! Starting LoRa reception... LoRa packe
 
 ## License
 This project is open-source and available under the MIT License. Feel free to modify and distribute.
-
----
-
-## Credits
-Developed using the Arduino framework and inspired by IoT gateway architectures.
