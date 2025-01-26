@@ -72,3 +72,9 @@ BLE advertising started. Device connected! Starting LoRa reception... LoRa packe
 
 ## License
 This project is open-source and available under the MIT License. Feel free to modify and distribute.
+
+## Sources
+- Bluetooth: https://github.com/nkolban/ESP32_BLE_Arduino
+- LoRa: https://github.com/sandeepmistry/arduino-LoRa
+- FreeRTOS: https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/FreeRTOS
+- JSON: https://arduinojson.org/
