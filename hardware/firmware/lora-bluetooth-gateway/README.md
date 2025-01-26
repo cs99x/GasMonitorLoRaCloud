@@ -1,4 +1,4 @@
-# oRa Bluetooth Gateway
+# LoRa Bluetooth Gateway
 
 This project implements a gateway that bridges LoRa and Bluetooth Low Energy (BLE) using the ESP32 microcontroller. It allows the ESP32 to receive JSON payloads over LoRa and send them via BLE notifications to a connected BLE client.
 
