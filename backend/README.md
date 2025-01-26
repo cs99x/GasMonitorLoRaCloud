@@ -73,3 +73,8 @@ To deploy the application:
 ## License
 
 This project is licensed under the MIT License.
+
+## Sources
+- https://flask.palletsprojects.com/
+- https://flask-socketio.readthedocs.io/
+- Database: https://github.com/lukeyeager/flask-sqlalchemy-socketio-demo
