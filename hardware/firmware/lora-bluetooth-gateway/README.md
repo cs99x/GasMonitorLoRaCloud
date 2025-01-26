@@ -10,15 +10,6 @@ This project implements a gateway that bridges LoRa and Bluetooth Low Energy (BL
 
 ---
 
-## Hardware Setup
-
-### Components
-1. ESP32 (e.g., DevKit v1)
-2. LoRa Module (e.g., SX1278 or SX1276)
-3. Jumper wires for connections
-
----
-
 ## How It Works
 
 ### 1. BLE Server
