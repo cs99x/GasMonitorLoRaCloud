@@ -101,3 +101,8 @@ Parsed data successfully: DeviceData(id: "Device123", ...)
 ## License
 
 This project is open-source and licensed under the MIT License.
+
+## Sources
+- Bluetooth: https://developer.apple.com/documentation/corebluetooth
+- Bluetooth: https://cdn-learn.adafruit.com/downloads/pdf/build-a-bluetooth-app-using-swift-5.pdf
+- User Interface https://developer.apple.com/documentation/swiftui
