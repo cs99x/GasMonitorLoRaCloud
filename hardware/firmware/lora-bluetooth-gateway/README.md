@@ -139,5 +139,3 @@ This project is open-source and available under the MIT License. Feel free to mo
 
 ## Credits
 Developed using the Arduino framework and inspired by IoT gateway architectures.
-
-This README.md provides a comprehensive overview of your project, detailing its features, setup, usage, and future development possibilities.
