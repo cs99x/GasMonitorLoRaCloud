@@ -54,43 +54,6 @@ The app expects device data in the following JSON format:
 }
 ```
 
-## Key Components
-
-### `ContentView`
-- Manages the user interface for scanning, connecting, and displaying device data.
-- Displays either a list of discovered devices or the details of the connected device.
-
-### `BluetoothManager`
-- Handles all Bluetooth-related operations, including:
-  - Scanning for devices.
-  - Connecting to peripherals.
-  - Subscribing to characteristics for data updates.
-- Parses incoming JSON data into the `DeviceData` model for structured display.
-
-### `DeviceData`
-- A Swift structure to decode and store sensor data received from the device.
-
-## Setup Instructions
-
-1. **Environment Setup**:
-   - Install Xcode on macOS.
-   - Ensure Bluetooth is enabled on your Mac and test device.
-
-2. **Clone the Repository**:
-   ```bash
-   git clone <repository-url>
-   cd <repository-folder>
-   ```
-
-3. **Build and Run**:
-   - Open the project in Xcode.
-   - Select a device or simulator to run the app.
-   - Build and run the app.
-
-4. **Test with a BLE Device**:
-   - Ensure a BLE device is available that sends data in the expected JSON format.
-   - Start scanning, connect to the device, and view the sensor data.
-
 ## Screens
 
 1. **Scanning Screen**:
@@ -100,11 +63,6 @@ The app expects device data in the following JSON format:
 2. **Device Data Screen**:
    - Shows real-time sensor readings from the connected device.
    - Displays detailed battery status, sensor readings, temperature, and system status.
-
-## Dependencies
-
-- **CoreBluetooth**: Provides BLE functionality for scanning and connecting to devices.
-- **SwiftUI**: Used for creating the app's user interface.
 
 ## Example Output
 
