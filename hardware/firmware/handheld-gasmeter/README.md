@@ -1,4 +1,3 @@
-
 # Gas Sensor Monitoring System
 
 This project is a gas sensor monitoring system built around the ESP32 microcontroller. It utilizes multiple MQ-series sensors to measure various gas concentrations and display them in real-time. The system is designed for modularity and future enhancements, including **FreeRTOS multithreading**, optimized user interaction, debugging tools, and improved battery support.
@@ -20,10 +19,10 @@ This project is a gas sensor monitoring system built around the ESP32 microcontr
   - Enhanced **User Interaction**:
     - Button-based navigation to toggle between multiple screens (e.g., gas levels, battery status).
     - Intuitive layout with bar graphs and data labels for easy readability.
-  
+
 - **Alerts**:
   - Buzzer alerts when gas levels exceed configurable thresholds.
-  
+
 - **Battery Monitoring**:
   - Tracks battery percentage and displays it on the OLED screen.
   - Designed for integration with Li-ion battery power sources.
@@ -123,8 +122,19 @@ This project is a gas sensor monitoring system built around the ESP32 microcontr
 
 ---
 
-**License**: MIT License
+## Sources
+
+- [ESP-IDF Documentation](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/index.html)
+- [ESP32 Pinout Reference](https://randomnerdtutorials.com/esp32-pinout-reference-gpios/)
+- [MQ3 Datasheet](https://cdn.sparkfun.com/assets/6/a/1/7/b/MQ-3.pdf)
+- [MQ135 Datasheet](https://www.winsen-sensor.com/d/files/PDF/Semiconductor20Gas20Sensor/MQ13520(Ver1.4)20-20Manual.pdf)
+- [MQ2 Datasheet](https://www.winsen-sensor.com/d/files/PDF/Semiconductor20Gas20Sensor/MQ-220(Ver1.4)20-20Manual.pdf)
+- [MQ9 Datasheet](https://cdn.sparkfun.com/assets/d/f/5/e/2/MQ-9BVer1.4-Manual.pdf)
+- [Adafruit SH110X OLED](https://www.adafruit.com/product/5228)
+- [Adafruit OLED Arduino Library](https://learn.adafruit.com/monochrome-oled-breakouts/arduino-library-and-examples)
+- [Arduino LoRa Send and Receive Tutorial](https://docs.arduino.cc/tutorials/mkr-wan-1300/lora-send-and-receive/)
+- [ESP32 with Gas Sensor (MQ2) Tutorial](https://prilchen.de/es32-mit-gassensor-mq02/)
 
 ---
 
-This README provides an overview of the current features and roadmap for the gas monitoring system. With the planned enhancements, it aims to be a robust solution for real-time gas detection and monitoring.
+**License**: MIT License
