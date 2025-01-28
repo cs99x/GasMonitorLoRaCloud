@@ -5,7 +5,7 @@ The **GasMonitorLoRaCloud** project is a comprehensive IoT solution designed to 
 
 ## Features
 
-- **Gas Level Monitoring**: Continuously measures gas concentrations using sensors.
+- **Gas Level Monitoring**: Continuously measures gas concentrations using sensors (CH4, CO, LPG, H2).
 - **LoRa Communication**: Transmits data over long distances using LoRa technology.
 - **Cloud Integration**: Sends collected data to cloud platforms for storage and analysis.
 - **Data Visualization**: Offers real-time and historical data visualization through cloud dashboards.
@@ -39,7 +39,7 @@ For more details on the backend setup, see the [Backend README](https://github.c
 
 ### 3. iOS App
 
-The iOS app enhances the project by providing real-time monitoring and interaction with gas sensors via Bluetooth.
+The iOS app enhances the project by providing real-time monitoring and interaction with gas sensors via Bluetooth and establishing a conectiontion to the cloud.
 
 #### Key Features
 
