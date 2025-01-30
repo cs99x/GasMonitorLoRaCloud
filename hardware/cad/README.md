@@ -1,7 +1,7 @@
 
 # 3D Printed Case for Gas Meter Monitoring System
 
-This repository includes designs and files for a 3D printed case used in the Gas Meter Monitoring System. The case is versatile and can serve as both a **handheld device** and a **LoRa gateway**.
+This repository should include designs and files for a 3D printed case for both a: **handheld device** and a **LoRa gateway**.
 
 ## Overview
 
