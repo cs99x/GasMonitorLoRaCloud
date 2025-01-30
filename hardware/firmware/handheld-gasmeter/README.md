@@ -1,6 +1,6 @@
 # Gas Sensor Monitoring System
 
-This project is a gas sensor monitoring system built around the ESP32 microcontroller. It utilizes multiple MQ-series sensors to measure various gas concentrations and display them in real-time. The system is designed for modularity and future enhancements, including **FreeRTOS multithreading**, optimized user interaction, debugging tools, and improved battery support.
+This project is a gas sensor monitoring system built around the ESP32 microcontroller. It utilizes 4 MQ-series sensors to measure various gas concentrations (PPM) and display them in real-time. The system is designed for modularity, the choice of MQ sensor is interchangeable.
 
 ---
 
@@ -20,16 +20,6 @@ This project is a gas sensor monitoring system built around the ESP32 microcontr
     - Button-based navigation to toggle between multiple screens (e.g., gas levels, battery status).
     - Intuitive layout with bar graphs and data labels for easy readability.
 
-- **Alerts**:
-  - Buzzer alerts when gas levels exceed configurable thresholds.
-
-- **Battery Monitoring**:
-  - Tracks battery percentage and displays it on the OLED screen.
-  - Designed for integration with Li-ion battery power sources.
-
-- **FreeRTOS**:
-  - Tasks for managing sensor readouts, display updates, and future LoRa integration.
-  - Multithreading planned for smoother task management.
 
 - **Debugging Tools**:
   - Serial monitoring of JSON-formatted sensor data for easy troubleshooting.
@@ -84,18 +74,6 @@ This project is a gas sensor monitoring system built around the ESP32 microcontr
 - **Navigation**:
   - Button-press toggles between screens.
   - Alerts for threshold violations.
-
-### FreeRTOS Tasks
-- **Sensor Display Task** (Core 0):
-  - Reads sensor data and updates the display.
-  - Handles user input via the button.
-- **LoRa Task** (Core 1):
-  - Placeholder for future LoRa integration.
-  - Simulates activity with blinking LEDs.
-
-### Battery Monitoring
-- Monitors and displays battery percentage on the OLED.
-- Supports portable operation using Li-ion batteries.
 
 ### Debugging
 - Serial output of JSON-formatted sensor data for external tools.
