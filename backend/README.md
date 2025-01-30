@@ -1,7 +1,7 @@
 
 # Real-Time Sensor Data Monitoring Application
 
-This project is a Flask application designed to monitor sensor data in real-time using Socket.IO and SQLAlchemy. It serves as a backend system for collecting, storing, and visualizing data from gas monitoring sensors.
+This project is a Flask application designed to monitor sensor data in real-time using Socket.IO and SQLAlchemy. It serves as a backend system for collecting, storing, and visualizing data from 4 gas monitoring sensors.
 
 ## Features
 
