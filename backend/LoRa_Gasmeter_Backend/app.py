@@ -25,10 +25,7 @@ socketio = SocketIO(app, ping_timeout=30, ping_interval=10)
 """
 @brief App and Database Configuration.
 """
-# Use flexible database path that works in different environments
-basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.environ.get('DATABASE_PATH') or os.path.join(os.path.dirname(basedir), 'instance', 'sensor_data.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}?check_same_thread=False'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{"/home/csuser/GasMonitorLoRaCloud/backend/instance/sensor_data.db"}?check_same_thread=False'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -466,11 +463,7 @@ if __name__ == '__main__':
     with app.app_context():
         try:
             logger.info("Checking for existing database and tables...")
-            db_dir = os.path.dirname(db_path)
-            if not os.path.exists(db_dir):
-                os.makedirs(db_dir)
-                logger.info(f"Created database directory: {db_dir}")
-            if not os.path.exists(db_path):
+            if not os.path.exists('/home/csuser/GasMonitorLoRaCloud/backend/instance/sensor_data.db'):
                 logger.info("Database file not found. Creating a new database.")
             db.create_all()
             logger.info("Database and tables created successfully.")
