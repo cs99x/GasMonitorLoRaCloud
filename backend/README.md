@@ -22,11 +22,26 @@ This project is a Flask application designed to monitor sensor data in real-time
 
 ## Usage
 
+### API Documentation
+
+The API is fully documented with **Swagger/OpenAPI**. Once the application is running, you can access the interactive API documentation at:
+
+**Swagger UI**: `http://<host>:8000/apidocs/`
+
+The Swagger UI provides:
+- Interactive API testing interface
+- Detailed endpoint documentation
+- Request/response examples
+- Schema definitions
+
+You can test all API endpoints directly from your browser using the Swagger interface.
+
 ### Endpoints
 
 1. **Root Page (`/`)**: Displays the real-time sensor dashboard.
 2. **Graph Page (`/graph`)**: Displays historical data visualizations.
-3. **POST `/receive-json`**: Receives sensor data in JSON format.
+3. **Swagger API Docs (`/apidocs/`)**: Interactive API documentation and testing interface.
+4. **POST `/receive-json`**: Receives sensor data in JSON format.
    - Request Body Example:
      ```json
      {
@@ -36,8 +51,8 @@ This project is a Flask application designed to monitor sensor data in real-time
        "sensors": [{"type": "CH4", "val": 200}, {"type": "CO", "val": 1280}, {"type": "CO", "val": 726}, {"type": "CO", "val": 3856}]
      }
      ```
-4. **GET `/get-last-entity`**: Retrieves the latest sensor data entry.
-5. **GET `/get-data-from-timestamp`**: Retrieves data between the current and a specific timestamp.
+5. **GET `/get-last-entity`**: Retrieves the latest sensor data entry.
+6. **GET `/get-data-from-timestamp`**: Retrieves data between the current and a specific timestamp.
    - Query Parameter: `system_time=<timestamp>`
 
 ### Real-Time Communication

@@ -32,10 +32,22 @@ For detailed information on hardware setup, refer to the respective READMEs:
 ### 2. Cloud Platform
 
 - **Data Storage**: Collects and stores gas level data received from the LoRa gateway.
+- **REST API**: Provides endpoints for receiving sensor data and querying historical records.
+- **API Documentation**: Interactive Swagger/OpenAPI documentation for easy API testing and integration.
 - **Visualization Tools**: Provides dashboards for monitoring real-time and historical data.
 - **Alert Mechanisms**: Notifies users when gas levels exceed predefined thresholds.
 
 For more details on the backend setup, see the [Backend README](https://github.com/cs99x/GasMonitorLoRaCloud/blob/main/backend/README.md).
+
+#### API Endpoints
+
+The backend provides a REST API with the following endpoints:
+
+- **POST `/receive-json`**: Submit sensor data from IoT devices
+- **GET `/get-last-entity`**: Retrieve the most recent sensor reading
+- **GET `/get-data-from-timestamp`**: Query historical sensor data from a specific timestamp
+
+**Interactive API Documentation**: Access the Swagger UI at `http://<host>:8000/apidocs/` to test the API directly from your browser.
 
 ### 3. iOS App
 
