@@ -47,7 +47,7 @@ The backend provides a REST API with the following endpoints:
 - **GET `/get-last-entity`**: Retrieve the most recent sensor reading
 - **GET `/get-data-from-timestamp`**: Query historical sensor data from a specific timestamp
 
-**Interactive API Documentation**: Access the Swagger UI at `http://<host>:8000/api/docs` to test the API directly from your browser.
+**Interactive API Documentation**: Access the Swagger UI at `http://<host>:8000/apidocs/` to test the API directly from your browser.
 
 ### 3. iOS App
 

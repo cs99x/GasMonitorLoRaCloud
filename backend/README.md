@@ -26,7 +26,7 @@ This project is a Flask application designed to monitor sensor data in real-time
 
 The API is fully documented with **Swagger/OpenAPI**. Once the application is running, you can access the interactive API documentation at:
 
-**Swagger UI**: `http://<host>:8000/api/docs`
+**Swagger UI**: `http://<host>:8000/apidocs/`
 
 The Swagger UI provides:
 - Interactive API testing interface
@@ -40,7 +40,7 @@ You can test all API endpoints directly from your browser using the Swagger inte
 
 1. **Root Page (`/`)**: Displays the real-time sensor dashboard.
 2. **Graph Page (`/graph`)**: Displays historical data visualizations.
-3. **Swagger API Docs (`/api/docs`)**: Interactive API documentation and testing interface.
+3. **Swagger API Docs (`/apidocs/`)**: Interactive API documentation and testing interface.
 4. **POST `/receive-json`**: Receives sensor data in JSON format.
    - Request Body Example:
      ```json
