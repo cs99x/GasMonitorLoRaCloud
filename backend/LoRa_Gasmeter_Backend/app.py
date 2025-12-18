@@ -9,12 +9,33 @@ from threading import Thread
 import time
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flasgger import Swagger
 import datetime
 import logging
 import json
 import os
 
 app = Flask(__name__)
+
+"""
+@brief Initialize Swagger for API documentation.
+"""
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "Gas Monitor LoRa Cloud API",
+        "description": "REST API for real-time sensor data monitoring. This API allows you to send sensor data from IoT devices, retrieve the latest readings, and query historical data.",
+        "version": "1.0.0",
+        "contact": {
+            "name": "GasMonitorLoRaCloud Project",
+            "url": "https://github.com/cs99x/GasMonitorLoRaCloud"
+        }
+    },
+    "basePath": "/",
+    "schemes": ["http", "https"]
+}
+
+swagger = Swagger(app, template=swagger_template)
 
 """
 @brief Initialize Flask-SocketIO.
@@ -120,6 +141,80 @@ def graph():
 """
 @brief Endpoint to receive and store sensor data.
 @return JSON response.
+---
+tags:
+  - Sensor Data
+summary: Receive and store sensor data
+description: Accepts sensor data from IoT devices and stores it in the database. The system automatically adds a server timestamp upon receipt.
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - in: body
+    name: body
+    description: Sensor data payload
+    required: true
+    schema:
+      type: object
+      required:
+        - pct
+        - id
+      properties:
+        pct:
+          type: integer
+          description: Battery percentage (0-100)
+          example: 90
+        id:
+          type: string
+          description: Device identifier
+          example: "handheld 1"
+        ts:
+          type: integer
+          description: Client-provided timestamp (Unix timestamp)
+          example: 1673049150
+        sensors:
+          type: array
+          description: Array of sensor readings
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                description: Type of gas sensor (CH4, CO, LPG, H2)
+                example: "CH4"
+              val:
+                type: integer
+                description: Sensor value in ppm
+                example: 200
+responses:
+  200:
+    description: Data successfully received and stored
+    schema:
+      type: object
+      properties:
+        received:
+          type: object
+          description: Echo of the received data
+        system_time:
+          type: integer
+          description: Server timestamp when data was received
+  400:
+    description: Invalid request (missing required fields or no JSON payload)
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Missing required fields: 'pct' or 'id'"
+  500:
+    description: Server error
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "An unexpected error occurred."
 """
 @app.route('/receive-json', methods=['POST'])
 def receive_json():
@@ -149,6 +244,65 @@ def receive_json():
 """
 @brief Retrieve the last sensor data entry.
 @return JSON response with the latest entry.
+---
+tags:
+  - Sensor Data
+summary: Get the latest sensor data entry
+description: Retrieves the most recent sensor data entry from the database, including battery level, device ID, timestamp, and all sensor readings.
+produces:
+  - application/json
+responses:
+  200:
+    description: Latest sensor data retrieved successfully
+    schema:
+      type: object
+      properties:
+        pct:
+          type: integer
+          description: Battery percentage
+          example: 90
+        device_id:
+          type: string
+          description: Device identifier
+          example: "handheld 1"
+        system_time:
+          type: integer
+          description: Server timestamp (Unix timestamp)
+          example: 1673049150
+        system_datetime:
+          type: string
+          description: Server timestamp in ISO 8601 format
+          example: "2023-01-06T20:45:50"
+        sensors:
+          type: array
+          description: Array of sensor readings
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                description: Type of gas sensor
+                example: "CH4"
+              val:
+                type: integer
+                description: Sensor value in ppm
+                example: 200
+  404:
+    description: No data found in the database
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "No data found"
+  500:
+    description: Server error
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "An unexpected error occurred."
 """
 @app.route('/get-last-entity', methods=['GET'])
 def get_last_entity():
@@ -180,6 +334,82 @@ def get_last_entity():
 """
 @brief Retrieve sensor data from a specific timestamp.
 @return JSON response with filtered data entries.
+---
+tags:
+  - Sensor Data
+summary: Get historical sensor data from a specific timestamp
+description: Retrieves all sensor data entries from the specified timestamp onwards. If the provided timestamp is earlier than the first entry, data is returned from the first available entry.
+produces:
+  - application/json
+parameters:
+  - in: query
+    name: system_time
+    type: integer
+    required: true
+    description: Unix timestamp to start retrieving data from
+    example: 1673049150
+responses:
+  200:
+    description: Sensor data retrieved successfully
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          pct:
+            type: integer
+            description: Battery percentage
+            example: 90
+          device_id:
+            type: string
+            description: Device identifier
+            example: "handheld 1"
+          system_time:
+            type: integer
+            description: Server timestamp (Unix timestamp)
+            example: 1673049150
+          system_datetime:
+            type: string
+            description: Server timestamp in ISO 8601 format
+            example: "2023-01-06T20:45:50"
+          sensors:
+            type: array
+            description: Array of sensor readings
+            items:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: Type of gas sensor
+                  example: "CH4"
+                val:
+                  type: integer
+                  description: Sensor value in ppm
+                  example: 200
+  400:
+    description: Missing or invalid query parameter
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "System time parameter is required"
+  404:
+    description: No data found for the provided timestamp
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "No data found for the provided system time"
+  500:
+    description: Server error
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "An unexpected error occurred."
 """
 @app.route('/get-data-from-timestamp', methods=['GET'])
 def get_data_from_timestamp():
