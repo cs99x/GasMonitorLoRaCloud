@@ -234,7 +234,7 @@ curl -X GET "http://localhost:8000/get-data-from-timestamp?system_time=170317440
 
 ### 3. iOS App
 
-The iOS app enhances the project by providing real-time monitoring and interaction with gas sensors via Bluetooth and establishing a conectiontion to the cloud.
+The iOS app enhances the project by providing real-time monitoring and interaction with gas sensors via Bluetooth and establishing a connection to the cloud.
 
 #### Key Features
 
