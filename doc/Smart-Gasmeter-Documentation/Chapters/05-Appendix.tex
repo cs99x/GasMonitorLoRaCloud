@@ -1,0 +1,390 @@
+\chapter{Appendix}
+
+\section{Sprint History}
+\subsection{ConOps MS Report - 24. Okt 2024}{
+1. Introduction
+\newline
+This document provides developers and team leaders with an overview of the target users
+for the project. It offers a summary of the various use cases and target groups.
+\newline
+2. System Overview
+\newline
+Vision: The system is designed to detect multiple harmful gases in real-time and wirelessly
+transmit the measured values to a digital device, even without direct line of sight.
+Operating Environment: The system will be used both indoors and outdoors by emergency
+response units such as public safety agencies (BOS). It provides an additional layer of safety
+for responders during operations and supports leadership in monitoring the condition of
+personnel and potential hazards at the scene. The operator will carry a mobile gas detection
+device that provides information about the gases in their environment. Simultaneously, the
+system sends the collected gas concentrations to the cloud, allowing leadership to monitor
+the operator’s situation remotely and automatically.
+\newline
+3. Operational Requirements
+Key Functions:
+\begin{itemize}
+    \item Real-time detection of gases
+    \item Display of gas concentrations for the device user
+    \item Transmission of gas concentrations to the cloud
+    \item Real-time display of the measured gas concentrations via a web app
+\end{itemize}
+User Groups:
+\begin{itemize}
+    \item Technical Relief Organization (THW)
+    \item Fire Department
+    \item Researchers
+\end{itemize}
+The system allows users to determine whether hazardous gases are present during the
+exploration of scenarios, operational situations, or terrains. At the same time, command
+personnel or those outside the scenario can monitor whether the user is in a dangerous
+situation and whether assistance or rescue is required. It also helps to create a clearer
+picture of the situation by identifying hazardous zones.
+Main Application Area: The system will primarily be used by the Technical Relief
+Organization (THW). It enables emergency personnel to detect dangerous gases in their
+environment and allows command personnel to monitor the status of the team in real time.
+Operational Requirements:
+\begin{itemize}
+    \item Use in confined spaces with high dust levels
+    \item Shock resistance
+    \item Resistance to sparks
+    \item Long-term usability, even during hours-long standby operations and explorations
+\end{itemize}
+spanning several kilometers
+Potential Areas of Use:
+\begin{itemize}
+    \item Forests
+    \item Bunker facilities
+    \item Industrial areas (chemical plants, landfills, farms)
+    \item Residential complexes
+    \item Rubble zones
+    \item Flood zones
+\end{itemize}
+
+Cave Exploration: Scientists working in caves or other enclosed spaces can better assess
+their surroundings. External observers can also monitor the situation and intervene more
+quickly if needed. Additionally, the collected data can be used for later analysis or general risk
+assessment.
+Private Users in Health-Risk Areas: Individuals in hazardous areas such as abandoned
+buildings (Lost Places) can better assess their own safety. External observers can also
+monitor the situation and request assistance early in case of danger, as well as relay
+important information
+}
+
+\subsection{Architectural Spike MS Report -  21. Nov 2024}{
+Progress Since the Last Milestone:
+\begin{itemize}
+    \item Successfully reassigned workload across the team.
+    \item eveloped a "Hello World" iOS mobile application.
+    \item  Created the first prototype of a React Native website
+    \item Developed the initial prototype of a React Native mobile application.
+    \item Built a "Hello World" project using Django.
+    \item Nearly completed the setup of the BWShare Cloud Server.
+\end{itemize}
+Plans for the Next Milestone:
+\begin{itemize}
+    \item Deliver the first full-flow prototype, integrating key components.
+\end{itemize}
+Challenges Faced and Resolutions:
+\begin{itemize}
+    \item Team Reshuffling
+    \item Challenge: Adjusting team roles and responsibilities caused temporary
+delays.
+    \item Resolution: Successfully restructured the team to ensure alignment with
+project goals.
+    \item Setting Up the Server for the Django Backend:
+    \item Challenge: Encountered technical issues during the configuration of the
+backend server.
+    \item Resolution: Continued efforts to resolve these issues, with targeted support
+    \item Scaling for Gas Metrics:
+    \item Challenge: Implementation of scalable systems for gas measurement
+presented difficulties.
+    \item Resolution: work in progress
+\end{itemize}
+}
+
+\subsection{Alpha MS Report - 19. Dez 2024}
+
+{What did we accomplish since the last milestone?}
+\begin{itemize}
+    \item Read sensor data successfully.
+    \item Tested the sensor with limited capacity.
+    \item Prepared different data interfaces for user testing.
+    \item Identified various hardware components to resolve the battery management issue.
+\end{itemize}
+
+\subsection*{What do we plan to do by the next milestone?}
+\begin{itemize}
+    \item Integrate all necessary components to work seamlessly together.
+    \item Implement non-blocking code for the handheld device.
+    \item Ensure all four sensors work simultaneously.
+    \item Collect user feedback on the app design.
+    \item Develop initial designs for the cases of the different hardware components.
+\end{itemize}
+
+\subsection*{What hindrances did we face?}
+\begin{itemize}
+    \item Lack of necessary hardware (e.g., cables).
+    \begin{itemize}
+        \item \textbf{Solution:} Acquire the required hardware.
+    \end{itemize}
+    \item Uncertainty about the interface design.
+    \begin{itemize}
+        \item \textbf{Solution:} Conduct user testing.
+    \end{itemize}
+    \item Unknown limits of the sensors (e.g., sensitivity and accuracy).
+    \begin{itemize}
+        \item \textbf{Solution:} Engage a chemist to test the sensors.
+    \end{itemize}
+\end{itemize}
+
+
+\subsection{Beta MS Report}
+
+\subsection*{Accomplishments Since the Last Milestone}
+\begin{enumerate}
+    \item Achieved successful integration of all components.
+    \item Display functionality implemented:
+    \begin{itemize}
+        \item Shows all gases.
+        \item Cycles through cases with a button.
+    \end{itemize}
+\end{enumerate}
+
+\subsection*{Plans for the Next Milestone}
+\begin{enumerate}
+    \item Design and finalize the housing for the handheld device and gateway.
+    \item Enhance the display and button functionality.
+    \item Improve general documentation.
+    \item Upgrade the gateway app.
+\end{enumerate}
+
+\subsection*{Challenges and Solutions}
+\begin{enumerate}
+    \item Display Driver Blocking LoRa Communication:
+    \begin{itemize}
+        \item \textbf{Solution:} Adjusted the communication process to allocate more time (resolved blocking code issue).
+    \end{itemize}
+    \item Bad Sensor Calibration:
+    \begin{itemize}
+        \item \textbf{Solution:} Focus on improving calibration methods.
+    \end{itemize}
+\end{enumerate}
+
+\section{Architectural Decision Records}
+\begin{itemize}
+    \item Changed from ESP32 S1 to ESP32 S3 (more memory needed).
+    \item Reduced the number of bars on the screen where all sensors are shown (conflict with LoRa transmission).
+    \item Switched from React Native to HTML (unable to create a build folder for integration into the Flask server).
+\end{itemize}
+\newpage
+\section{Code Report}
+This section presents a breakdown of the project's codebase using \texttt{cloc}.
+
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\small, frame=lines]{text}
+34 text files.
+      24 unique files.
+      17 files ignored.
+
+github.com/AlDanial/cloc v 2.02  T=0.02 s (1460.0 files/s, 144238.9 lines/s)
+\end{minted}
+\caption{cloc Analysis Summary}
+\end{listing}
+
+\section{Lines of Code Breakdown}
+
+\begin{table}[H]
+\centering
+\caption{Lines of Code Breakdown by Language}
+\begin{tabularx}{\textwidth}{@{}lrrr@{}}
+\toprule
+\textbf{Language}       & \textbf{Files} & \textbf{Blank Lines} & \textbf{Code Lines} \\ \midrule
+Markdown                & 9              & 209                  & 586                 \\
+HTML                    & 2              & 39                   & 426                 \\
+Arduino Sketch          & 2              & 73                   & 310                 \\
+Swift                   & 4              & 36                   & 196                 \\
+Python                  & 1              & 33                   & 158                 \\
+JSON                    & 3              & 0                    & 52                  \\
+Text                    & 1              & 0                    & 28                  \\
+XML                     & 2              & 0                    & 21                  \\ \midrule
+\textbf{SUM:}           & 24             & 390                  & 1777                \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Authors Report}
+
+\begin{tcolorbox}[colback=red!5!white, colframe=red!75!black, title=Note]
+The authors listed in the repository may differ from those in the Git commits because most files were uploaded from a single PC to maintain consistency within the Git repository.
+\end{tcolorbox}
+
+\subsection{full file listing}{
+\begin{itemize}
+    \item \begin{verbatim} README.md (Romeo Massoud) \end{verbatim}
+    \item \begin{verbatim} graph.html (Romeo Massoud) \end{verbatim}
+\item \begin{verbatim} graph.html (Romeo Massoud) \end{verbatim}
+\item \begin{verbatim} index.html (Romeo Massoud) \end{verbatim}
+\item \begin{verbatim} __init__.py (Romeo Massoud, Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} app.py (Romeo Massoud, Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} sensor_data.db (Auto/untouched) \end{verbatim}
+\item \begin{verbatim} README.md (Romeo Massoud, Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} requirements.txt (Romeo Massoud, Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} Smart gasmeter documentation (Maceo Pohl, Romeo Massoud, Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} README.md (Maceo Pohl) \end{verbatim}
+\item \begin{verbatim} README.md (Maceo Pohl) \end{verbatim}
+\item \begin{verbatim} handheld-gasmeter.ino (Maceo Pohl) \end{verbatim}
+\item \begin{verbatim} README.md (Maceo Pohl) \end{verbatim}
+\item \begin{verbatim} lora-bluetooth-gateway.ino (Christoph Schmid, Maceo Pohl) \end{verbatim}
+\item \begin{verbatim} gasmeter_handheld_device.kicad_ (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} README.md (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} gasmeter_handheld_device.pdf (Auto/untouched) \end{verbatim}
+\item \begin{verbatim} gasmeter_handheld_device.png (Auto/untouched) \end{verbatim}
+\item \begin{verbatim} gasmeter_handheld_device.kicad_pcb (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} gasmeter_handheld_device.kicad_pro (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} gasmeter_handheld_device.kicad_sch (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} gasmeter_handheld_device.kicad_pcb (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} gasmeter_handheld_device.kicad_pro (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} gasmeter_handheld_device.kicad_sch (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} README.md (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} contents.xcworkspacedata (Auto/untouched) \end{verbatim}
+\item \begin{verbatim} xcschememanagement.plist (Auto/untouched) \end{verbatim}
+\item \begin{verbatim} project.pbxproj (Auto/untouched) \end{verbatim}
+\item \begin{verbatim} Contents.json (Auto/untouched) \end{verbatim}
+\item \begin{verbatim} Contents.json (Auto/untouched) \end{verbatim}
+\item \begin{verbatim} Contents.json (Auto/untouched) \end{verbatim}
+\item \begin{verbatim} Contents.json (Auto/untouched) \end{verbatim}
+\item \begin{verbatim} BluetoothManager.swift (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} ContentView.swift (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} DeviceData.swift (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} GasmeterApp.swift (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} README.md (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} .gitignore (Christoph Schmid) \end{verbatim}
+\item \begin{verbatim} README.md (Christoph Schmid) \end{verbatim}
+\end{itemize}
+}
+\subsubsection{author group}{
+\subsubsection{Christoph Schmid}
+\begin{itemize}
+    \item \begin{verbatim}gasmeter_handheld_device.kicad \end{verbatim}
+    \item \begin{verbatim}README.md \end{verbatim}
+    \item \begin{verbatim} gasmeter_handheld_device.kicad_pcb  \end{verbatim}
+    \item \begin{verbatim}gasmeter_handheld_device.kicad_pro \end{verbatim}
+    \item \begin{verbatim}gasmeter_handheld_device.kicad_sch \end{verbatim}
+    \item \begin{verbatim}gasmeter_handheld_device.kicad_pcb  \end{verbatim}
+    \item \begin{verbatim}gasmeter_handheld_device.kicad_pro  \end{verbatim}
+    \item \begin{verbatim}gasmeter_handheld_device.kicad_sch  \end{verbatim}
+    \item \begin{verbatim}README.md  \end{verbatim}
+    \item \begin{verbatim}BluetoothManager.swift \end{verbatim}
+    \item \begin{verbatim}ContentView.swift  \end{verbatim}
+    \item \begin{verbatim}DeviceData.swift \end{verbatim} 
+    \item \begin{verbatim}GasmeterApp.swift \end{verbatim} 
+    \item \begin{verbatim}README.md \end{verbatim}
+    \item \begin{verbatim}.gitignore  \end{verbatim}
+    \item \begin{verbatim} README.md \end{verbatim}
+\end{itemize}
+
+\subsubsection{Romeo Massoud}{
+\begin{itemize}
+    \item README.md
+    graph.html
+    index.html
+    
+\end{itemize}
+}
+
+\subsubsection{Maceo Pohl}{
+\begin{itemize}
+    \item README.md
+    \item \begin{verbatim}README.md \end{verbatim}
+    \item \begin{verbatim}handheld-gasmeter.ino \end{verbatim}
+\end{itemize}
+}
+
+\subsubsection{Christoph Schmid, Maceo Pohl}{
+\begin{itemize}
+    \item lora-bluetooth-gateway.ino
+\end{itemize}
+}
+
+\subsubsection{Christoph Schmid, Romeo Massoud}{
+\begin{itemize}
+    \item \begin{verbatim}__init__.py \end{verbatim}
+    \item \begin{verbatim}__init__ app.py \end{verbatim}
+    \item \begin{verbatim}__init__ README.md \end{verbatim}
+    \item \begin{verbatim}__init__ requirements.txt \end{verbatim}
+    \item \begin{verbatim}__init__ README.md \end{verbatim}
+\end{itemize}
+}
+
+\subsubsection{Christoph Schmid, Romeo Massoud, Maceo Pohl}{
+\begin{itemize}
+    \item Smart gasmeter documentation
+\end{itemize}
+}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/gasmeter_handheld_device.pdf}
+    \caption[IVl Wireing Diagram.]{How the components of the wiring of the Handhelddevice }
+    \label{fig:figure-02}
+\end{figure}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/WebFrontend1.jpg}
+    \caption[Vl Webfrontend.]{Shows how the web fronted looks like. 4 different gases can be seen with there current ppm an an visual indicator if they are currently in an hazardous or harmless value range }
+    \label{fig:WebFrontend1}
+\end{figure}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/Handhelddevice.jpg}
+    \caption[VIl Handheld Device.]{Shows the Handheld Device in its enclosure }
+    \label{fig:HandheldDevice}
+\end{figure}
+
+\subsection{Trello}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/Trello1.jpg}
+    \caption[TIl trello1.]{Shows the Trello Board at the time of the CONOPS MS Report}
+    \label{fig:WebFrontend1}
+\end{figure}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/Trello2.jpg}
+    \caption[TIIl trello2.]{Shows the Trello Board at the time of the Technology Demo MS Report}
+    \label{fig:WebFrontend1}
+\end{figure}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/Trello3.png}
+    \caption[TIIIl trello3.]{Shows the Trello Board at the time of the Architectural Spike MS Report }
+    \label{fig:WebFrontend1}
+\end{figure}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/Trello4.jpg}
+    \caption[TIVl trello4.]{Shows the Trello Board at the time of the Alpha Certification}
+    \label{fig:WebFrontend1}
+\end{figure}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/Trello5.jpg}
+    \caption[TVl trello5.]{Shows the Trello Board at the time of the Beta Certification}
+    \label{fig:WebFrontend1}
+\end{figure}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/Trello6.png}
+    \caption[TVIl trello6.]{Shows the Last Trello Board (at the time of the Certification ) }
+    \label{fig:WebFrontend1}
+\end{figure}
+
+
+

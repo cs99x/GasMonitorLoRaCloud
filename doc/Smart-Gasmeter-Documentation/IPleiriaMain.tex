@@ -1,0 +1,73 @@
+% Packages and document configurations.
+\documentclass[en]{IPLeiriaThesis}
+
+% Document variables.
+\input{Variables/Variables}
+
+% Loading of the glossary and acronyms.
+\makeglossaries
+\loadglsentries{Matter/04-Glossary}
+\loadglsentries[\acronymtype]{Matter/05-Acronyms}
+
+\begin{document}
+
+% Front matter.
+\include{Matter/00-Cover}
+\include{Matter/01-FPage}
+
+% Roman numeration.
+\pagenumbering{roman}
+
+% Declaration of authorship.
+\include{Matter/02-Declaration}
+
+% Acknowledgements.
+\include{Matter/03-Acknowledgements}
+
+% Abstract.
+\include{Chapters/00-Abstract}
+
+% List of contents, figures, and tables.
+\tableofcontents
+%\plainblankpage
+\listoffigures
+%\plainblankpage
+%\listoftables\plainblankpage
+
+% Print glossary and acronyms.
+\printglossary
+%\plainblankpage
+\printglossary[type=\acronymtype]
+%\plainblankpage
+
+% Arabic numeration.
+\pagenumbering{arabic}
+
+% Chapters.
+\include{Chapters/01-Project overview and goal}
+\include{Chapters/02-Scenario and Functionality Description}
+\include{Chapters/03-Architecture (internal)}
+\include{Chapters/04-Lessons Learned}
+\include{Chapters/05-Appendix}
+\include{Chapters/06-Tables}
+\include{Chapters/07-Lists}
+\include{Chapters/08-Code}
+\include{Chapters/09-Conclusion}
+
+% Bibliography.
+%\blankpage\printbibliography
+
+% Appendices: Work that *YOU* developed.
+\appendix
+%\input{Matter/06-Appendices}
+%\input{Chapters/Appendices/00-AppendixA}
+%\input{Chapters/Appendices/01-AppendixB}
+
+% Annexes: Work that *YOU DID NOT* developed.
+%\input{Matter/07-Annexes}
+%\input{Chapters/Annexes/00-AnnexA}
+
+% Back page.
+%\input{Matter/08-BPage}
+
+\end{document}

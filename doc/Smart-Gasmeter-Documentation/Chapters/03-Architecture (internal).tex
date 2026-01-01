@@ -1,0 +1,185 @@
+\chapter{Internal Architecture: Interactions and Components}
+
+This chapter focuses on the internal architecture of the system, detailing how its components interact to achieve the primary functionality described in earlier scenarios. It provides both static and dynamic views of the system’s internal workings.  
+
+The static view illustrates the structure of internal components, such as component, package, or class diagrams. The dynamic view explains the interactions between these components, using sequence diagrams to showcase how they collaborate to deliver the desired outcomes.  
+
+Additionally, this chapter highlights the libraries, frameworks, and technologies used, as well as any reused hardware or software components. This ensures transparency in the development process and acknowledges external contributions while clarifying which aspects were created by the development team.  
+
+\section{Handheld-Device}
+The gas sensors produce an analog signal which then get converted by the ESP32-S3 via 10 bit ADC. The firmware then converts the raw sensor values into ppm values corresponding to the specs of the individual sensors.
+On a 1.3" OLED display the sensor values get displayed in real time to provide the user an overview over the current gas levels in the air. The data also gets wireless transmitted via JSON over LoRa to the LoRa-Bluetooth gateway.
+With the current use of the following sensors these gases can be detected:
+\begin{table}[!htpb]
+    \caption{detecteble gases}
+    \label{tab:table-01}
+    \centering
+    \begin{tabular}{llc}
+        \toprule
+        \textbf{Senor} & \textbf{gas} \\ 
+        \midrule
+        MQ 4        & \acrshort{ch4}   \\
+        MQ 6        & \acrshort{lpg}           \\
+        MQ 7        & \acrshort{co}      \\
+        MQ 8        & \acrshort{h2}      \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+\newline
+The components and wiring of the handheld device can be see in \autoref{fig:figure-02} and in its enclosure here \autoref{fig:HandheldDevice}.
+
+\section{LoRa-Gateway}
+The LoRa Bluetooth gateway is based on an ESP32-S1 micro controller and its purpose is to receive the JSON data sent from the handheld device to transmit it via Bluetooth to the smartphone for further processing and providing the data to the cloud back-end.
+
+\section{iOS Gateway App}
+The iOS-App receives via Bluetooth the transmitted data from the LoRa-Bluetooth gateway. The data is displayed on the main page after the user connected the gateway with the app. Meanwhile all received JSON payloads are sent to the cloud backend via POST request. The user is also able to query data to view the history of measured values.
+
+\section{Back-end}
+The backend acts as a centralized resource to collect data as well as providing it. Its receiving data via POST request from the mobile app and stores them in a SQLite database using SQLAlchemy. It also hosts a website for live tracking of the sensor values as well as providing historic values. The live data is provided using a websocket by using flask-socketio. The history data is provided by using a REST GET request from the current timestamp back to 1, 3 or 6 hours. The user can also display all history measured over the time.
+
+\section{Front-end}
+The frontend provides the user an overview over the current sensor values in real time. It also provides an historic overview over a specific timeframe the user can choose from. The live data is provided by the server back-end using a web socket and the historic data via GET request. The website itself is made using html and bootstrap (CSS). With java script all of the requests are processed.
+A screenshot of the frontend can be viewed here \autoref{fig:WebFrontend1}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/cmpPackage2.jpg}
+    \caption[IIIl Component Diagram.]{Diagram, showing how the different components Interact together}
+    \label{fig:figure-01}
+\end{figure}
+
+\section{References}
+\subsection{Used Hardware}
+\begin{itemize}
+  \item ESP32 S1
+  \item ESP32 S3
+  \item Adafruit Display SH1106
+  \item 2x LoRa Module RFM95
+  \item Flying Fish MQ Sensor set (MQ4, MQ7, MQ8, MQ9)
+  \item iPhone 15 Pro
+  \item vServer
+\end{itemize}{}\textbf{}
+
+\subsection{Libraries used for Handheld-Device}
+\begin{itemize}
+  \item stdio.h
+  \item freertos/FreeRTOS.h
+  \item freertos/task.h
+  \item driver/adc.h
+  \item Arduino.h
+  \item ArduinoJson.h
+  \item Wire.h
+  \item Adafruit\_GFX.h
+  \item Adafruit\_SH110X.h
+  \item SPI.h
+  \item LoRa.h
+\end{itemize}{}\textbf{}
+
+\subsection{Libraries used for LoRa-Bluetooth gateway}
+\begin{itemize}
+  \item BLEDevice.h
+  \item BLEUtils.h
+  \item BLEServer.h
+  \item BLE2902.h
+  \item SPI.h
+  \item ArduinoJson.h
+  \item LoRa.h
+\end{itemize}{}\textbf{}
+
+\subsection{Libraries used for iOS App}
+\begin{itemize}
+  \item Apple iOS SDK
+  \item Apple CoreBluetooth
+  \item Apple SwiftUI
+\end{itemize}{}\textbf{}
+
+\subsection{Libraries used for server backend}
+\begin{itemize}
+    \item bidict
+    \item blinker
+    \item certifi
+    \item charset-normalizer
+    \item click
+    \item Flask
+    \item Flask-Cors
+    \item Flask-SocketIO
+    \item Flask-SQLAlchemy
+    \item greenlet
+    \item gunicorn
+    \item h11
+    \item idna
+    \item itsdangerous
+    \item Jinja2
+    \item MarkupSafe
+    \item packaging
+    \item psycopg2-binary
+    \item python-dotenv
+    \item python-engineio
+    \item python-socketio
+    \item requests
+    \item simple-websocket
+    \item SQLAlchemy
+    \item typing\_extensions
+    \item urllib3
+    \item Werkzeug
+    \item wsproto
+    \item Gunicorn (Development Environment Flask)
+    \item NGINX Proxy
+\end{itemize}{}\textbf{}
+
+\subsection{Sources}
+\begin{itemize}
+    \item LATEX template
+        \begin{itemize}
+            \item https://www.overleaf.com/latex/templates/polytechnic-university-of-leiria-thesis-template/tqgbrncfhwgt "Polytechnic University of Leiria Thesis Template, José Areia "
+        \end{itemize}{}\textbf{}
+    \item Handheld-Device and LoRa-Bluetooth gateway
+        \begin{itemize}
+            \item https://docs.espressif.com/projects/esp-idf/en/stable/esp32/index.html
+            \item https://randomnerdtutorials.com/esp32-pinout-reference-gpios/
+            \item https://cdn.sparkfun.com/assets/6/a/1/7/b/MQ-3.pdf
+            \item https://www.winsen-sensor.com/d/files/PDF/Semiconductor20Gas20Sensor/MQ13520(Ver1.4)20-20Manual.pdf
+            \item https://www.winsen-sensor.com/d/files/PDF/Semiconductor20Gas20Sensor/MQ-220(Ver1.4)20-20Manual.pdf
+            \item https://cdn.sparkfun.com/assets/d/f/5/e/2/MQ-9BVer1.4-Manual.pdf
+            \item https://www.adafruit.com/product/5228
+            \item https://learn.adafruit.com/monochrome-oled-breakouts/arduino-library-and-examples
+            \item https://docs.arduino.cc/tutorials/mkr-wan-1300/lora-send-and-receive/
+            \item https://prilchen.de/es32-mit-gassensor-mq02/ 
+        \end{itemize}{}\textbf{}
+    \item Handheld-Device and LoRa-Bluetooth gateway
+        \begin{itemize}
+            \item https://github.com/nkolban/ESP32BLEArduino
+            \item https://github.com/sandeepmistry/arduino-LoRa
+            \item https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/FreeRTOS
+            \item https://arduinojson.org/
+        \end{itemize}{}\textbf{}
+    \item iOS App
+        \begin{itemize}
+            \item https://developer.apple.com/documentation/corebluetooth
+            \item https://cdn-learn.adafruit.com/downloads/pdf/build-a-bluetooth-app-using-swift-5.pdf
+            \item https://developer.apple.com/documentation/swiftui
+        \end{itemize}{}\textbf{}
+    \item Server back-end
+        \begin{itemize}
+            \item https://flask.palletsprojects.com/
+            \item https://flask-socketio.readthedocs.io/
+            \item https://github.com/lukeyeager/flask-sqlalchemy-socketio-demo
+        \end{itemize}{}\textbf{}
+    \item Front-end
+        \begin{itemize}
+            \item https://getbootstrap.com/
+            \item https://www.chartjs.org/
+            \item https://socket.io/
+            \item https://www.djangoproject.com/
+            \item https://developer.mozilla.org/
+            \item https://blynk.io/
+            \item https://thingspeak.com/
+            \item https://grafana.com/
+            \item https://aws.amazon.com/iot-core/ 
+            \item https://firebase.google.com/
+            \item https://www.home-assistant.io/
+            \item https://www.particle.io/
+            \item https://ubidots.com/
+            \item https://www.kaaproject.org/
+        \end{itemize}{}\textbf{}
+\end{itemize}{}\textbf{}

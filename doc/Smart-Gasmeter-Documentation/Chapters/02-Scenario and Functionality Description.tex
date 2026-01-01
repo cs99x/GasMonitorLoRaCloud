@@ -1,0 +1,72 @@
+\chapter{Scenario and Functionality}
+This chapter provides an overview of the Scenario and Functionality within the system, focusing on how interactions occur across the system boundary. It highlights the external interactions between users and system components, emphasizing real-time data flow, user actions, and environmental context.
+
+\section{Scenario}{
+The targeted users are individuals active in the \acrshort{bos} field. These are people who may work in remote or challenging environments. Such areas could include caves, manufacturing environment, forests, urban zones, near pipelines, or even inside gutters. These environments often pose various dangers to those operating there, such as the presence of harmful gases. Gases are particularly difficult to detect and, in cases like \acrshort{co}, can cause serious harm very quickly to those exposed. These gases can appear unexpectedly, even in locations where their presence might not be anticipated.
+
+For individuals working in these environments, it is highly beneficial to detect harmful gases before they cause harm. Conversely, it can also be valuable to confirm that an area is free of harmful gases. This allows people to work without unnecessary personal protective equipment \acrshort{ppe}, enabling greater freedom of movement or the safe use of equipment that might otherwise be hazardous.
+
+For those outside the immediate environment where harmful gases could be present, it is also important to have real-time awareness of what is happening on-site. Personnel operating on-site can often be too busy to communicate every detail of the situation. Someone monitoring from outside can provide critical oversight, such as identifying a slow rise in harmful gas concentrations and proactively taking measures to mitigate potential harm.
+
+This external monitoring can also be valuable for individuals overseeing larger-scale operations from a distance. By providing clear and direct information, it becomes easier to make critical decisions quickly and accurately, ultimately improving the safety of those working on-site.
+
+Additionally, after a situation has been resolved, having access to historical data about what occurred can be extremely useful. For instance, tracking where someone may have been exposed to certain gases can help refine safety protocols for future operations. Furthermore, if harm to an individual is detected, the ability to review gas exposure data can assist in identifying the cause. This can lead to faster diagnoses, more effective treatments, and potentially better outcomes for the affected individual.
+}
+
+\section{Functionality}{
+For individuals working in these hazardous environments, the ability to detect harmful gases in advance is crucial to preventing harm. In opposite, confirming the absence of harmful gases can save operators from wearing unnecessary PPE, increasing their range of movement and enabling the safe use of equipment otherwise not allowed to use.
+
+For those monitoring from outside (out field operator), real-time updates from the handheld device provide critical situational awareness. Operators on-site often face heavy workloads and may be unable to report every detail of the situation. Remote monitoring allows out field operators to identify risks, such as a slow increase in gas concentrations, and take proactive measures to prevent harm.
+
+Additionally, this capability benefits individuals overseeing larger operations. Clear and precise information allows for faster, more accurate decision-making, improving the safety and efficiency of those working on-site.
+
+Historical data can be reviewed and future operations can be improved with the knowledge gained.
+
+This solution not only enhances the safety of those in the field, but also improves operational efficiency and decision-making in complex, high-risk environments.
+}
+\newpage
+\section{Interaction}{
+
+\begin{itemize}
+    \item \textbf{Handheld-Device:}
+    \begin{itemize}
+        \item Independent monitoring and displaying gas concentrations in real-time.
+        \item Features a button to cycle through specific information, allowing the user to focus on particular gas readings as needed.
+        \item Automatically transmits sensor data via LoRa without requiring additional user input.
+    \end{itemize}
+
+    \item \textbf{LoRa-Bluetooth gateway:}
+    \begin{itemize}
+        \item Receives sensor data transmitted from the handheld device.
+        \item Connects to a smartphone (with internet connection) via Bluetooth, eliminating the need for a SIM card in the gateway.
+    \end{itemize}
+
+    \item \textbf{Smartphone application:}
+    \begin{itemize}
+        \item Receives sensor data from the gateway using Bluetooth.
+        \item Forwards the received data to a cloud back-end using the smartphone's internet connection.
+        \item Displays real-time data on the smartphone interface for immediate reference.
+    \end{itemize}
+
+    \item \textbf{Server:}
+    \begin{itemize}
+        \item Collects and stores incoming sensor data received via the internet.
+        \item Maintains a database for historical data storage and management.
+        \item Provides access to a web interface for visualizing and analyzing collected information.
+    \end{itemize}
+
+    \item \textbf{Web Interface:}
+    \begin{itemize}
+        \item Displays both real-time data and historical records of gas concentrations.
+        \item Provides detailed information about the monitored gases, including their characteristics and safety thresholds.
+        \item Issues alerts or notifications when gas concentration thresholds are met or exceeded.
+    \end{itemize}
+\end{itemize}
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/ComunicationDiagram.jpg}
+    \caption[IIl Comunication Diagram.]{Diagram, showing how the different Components communicate with each other}
+    \label{fig:figure-01}
+\end{figure}
+}
